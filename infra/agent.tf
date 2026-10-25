@@ -13,9 +13,14 @@ locals {
   serving = "`${var.project_id}.serving`"
 }
 
+# The provider's in-place update sends back the read-only last_published_context,
+# which the API rejects ("Last published context should not be set"). A deleted
+# agent also keeps its ID for 30 days. So any edit to this file creates a new
+# agent under a new ID, then deletes the old one. Find the agent by its display
+# name, not its ID.
 resource "google_gemini_data_analytics_data_agent" "market_risk" {
   location      = "global"
-  data_agent_id = "pulsar_market_risk"
+  data_agent_id = "pulsar_market_risk_${substr(filesha256("${path.module}/agent.tf"), 0, 8)}"
   display_name  = "Pulsar Capital market risk"
   description   = "Answers questions about 1-day Value at Risk and Expected Shortfall for Pulsar Capital's equity desks, including stress scenarios and TimesFM volatility."
 
@@ -102,6 +107,10 @@ resource "google_gemini_data_analytics_data_agent" "market_risk" {
         sql_query                 = "SELECT desk, MAX(IF(scenario_id = 'baseline', var_99_usd, NULL)) AS baseline_var_99_usd, MAX(IF(scenario_id = 'energy_down_15', var_99_usd, NULL)) AS stressed_var_99_usd FROM ${local.serving}.var_by_desk WHERE scenario_id IN ('baseline', 'energy_down_15') GROUP BY desk ORDER BY desk"
       }
     }
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 
   depends_on = [

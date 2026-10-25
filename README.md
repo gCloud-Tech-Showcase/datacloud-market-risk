@@ -104,7 +104,7 @@ To follow it as a notebook with charts instead, open **BigQuery Studio > Noteboo
 | Table `raw.stress_scenarios` | Seeded with `baseline` and `energy_down_15`. You add rows to it. |
 | Procedure `serving.simulate_scenario` | Runs the Monte Carlo for one scenario |
 | Dataform repository | Linked anonymously to this repo, pulls from `main` |
-| Data agent `pulsar_market_risk` | Under **BigQuery > Agents** |
+| Data agent **Pulsar Capital market risk** | Under **BigQuery > Agents** |
 | Notebooks `01 Value At Risk`, `Run Pipeline` | Under **BigQuery Studio > Notebooks**, from `notebooks/*.ipynb` |
 | Runtime template `Market risk notebooks` | Colab Enterprise runtime for the notebooks, on the `notebooks` network with no public IP |
 | Network `notebooks`, subnet `notebooks-<region>` | Private Google Access, so the runtime reaches Google APIs without a public IP |

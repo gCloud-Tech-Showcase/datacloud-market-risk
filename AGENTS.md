@@ -66,6 +66,7 @@ Correct, not just green: in `serving.var_by_desk`, desks with no stock in a scen
 - **`AI.FORECAST` dates steps on calendar days.** Step 1 after a Friday is a Saturday. Read it as the next trading day.
 - **Window functions run before `QUALIFY`.** Rank inside an already-filtered CTE (see `historical_pnl`).
 - **`raw.stress_scenarios` sector values must match `raw.sp500_companies.sector` exactly** (`Information Technology`, `Health Care`). `NULL` shocks every stock.
+- **Any edit to `infra/agent.tf` creates a new data agent with a new ID, then deletes the old one.** The provider's in-place update fails ("Last published context should not be set"), and a deleted agent keeps its ID for 30 days. Refer to the agent by its display name, **Pulsar Capital market risk**, never by ID.
 - **Editing a notebook means editing `notebooks/*.ipynb` and running `tofu apply`.** The commit step reruns when the file hash changes and replaces the notebook in BigQuery Studio, including any edits made in the console.
 - **Notebook runtimes have no public IP and no internet access.** Google APIs work through Private Google Access. `pip install` from PyPI does not, so notebooks use only preinstalled packages.
 - **`run-pipeline.ipynb` sets `REGION` itself.** Keep it equal to `var.region`.

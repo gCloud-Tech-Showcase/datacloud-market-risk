@@ -23,7 +23,7 @@ flowchart LR
     M --> V["serving.portfolio_var_summary<br/>serving.var_by_desk<br/>serving.var_contributions"]
     P1 --> H["serving.historical_pnl"]
     H --> V
-    V --> A["Data agent<br/>pulsar_market_risk"]
+    V --> A["Data agent<br/>Pulsar Capital market risk"]
 ```
 
 The same graph as Dataform compiles it:
