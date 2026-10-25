@@ -1,12 +1,6 @@
 # datacloud-market-risk
 
-<!-- SKELETON: the structure below is the convention; replace the content.
-     Keep this operational — how to stand the domain up, what the tables are,
-     how to verify, and the traps specific to THIS pipeline. Engineering
-     standards do not belong here; they live in the user-level agent toolkit. -->
-
-Standalone domain: Market Risk VaR on BigQuery. <!-- one or two lines: what it does,
-which Google Cloud products, and where the data comes from. -->
+Standalone demo: 1-day Value at Risk on BigQuery for a fictional firm, Pulsar Capital. Kaggle S&P 500 prices (CC0) land in `raw`, TimesFM (`AI.FORECAST`) sets forward volatility, a stored procedure runs a 100K-path filtered historical simulation, and a Conversational Analytics data agent answers questions over the risk views.
 
 ## Standing it up
 
@@ -15,60 +9,65 @@ which Google Cloud products, and where the data comes from. -->
 cd infra && tofu apply     # zero required variables
 ```
 
-**Tofu layout: flat** — everything in `infra/*.tf`, one apply, no `bootstrap/`
-stage. Stated rather than left to be inferred, per `rules/tofu.md`.
+**Tofu layout: flat.** Everything is in `infra/*.tf`, one apply, no `bootstrap/` stage.
 
-`tofu apply` enables APIs, creates the datasets, runner SA and IAM, stands up
-the Dataform repo, then triggers one pipeline run and blocks until it finishes.
-`setup.sh` covers what can't run inside the graph — and on a private repo that
-includes issuing Dataform's SSH deploy key, so the key never enters state.
+Apply order: APIs → datasets and raw tables → `load_market_data.sh` (Kaggle → GCS → `bq load`, seeds `stress_scenarios`) → one Dataform pipeline run → data agent. `run_pipeline` and `load_market_data` are `terraform_data` resources, so they run once; rerun the pipeline with `infra/scripts/run_pipeline.sh` (see `docs/quick.md`).
 
-Deploying elsewhere: change `project_id`'s default in `infra/variables.tf` —
-that single value drives the provider, the resources, the derived bucket names
-and the state bucket. Don't hardcode it anywhere else.
+Dataform compiles from `main` on GitHub. Push SQL changes before running the pipeline.
+
+Deploying elsewhere: change `project_id`'s default in `infra/variables.tf`, and `git_repo_url` if the SQL comes from a fork. Don't hardcode the project ID anywhere else.
+
+## Words
+
+| Term | Meaning here |
+| --- | --- |
+| VaR | 1-day Value at Risk, reported as a positive loss: the 1st (99%) or 5th (95%) percentile of portfolio P&L |
+| ES | Expected Shortfall: average loss beyond the VaR cut-off |
+| Path | One Monte Carlo draw: one replayed historical day plus per-stock noise |
+| Scenario | A row of `raw.stress_scenarios`. `baseline` has no shock. |
+| As-of date | `vars.as_of_date` in `workflow_settings.yaml`. Prices after it are ignored. |
+| Reader | The person running the demo in their own project. Never "viewer" or "audience". |
 
 ## Data model
 
-Datasets are named for the **medallion stage**; the domain (`market_risk`)
-is a Dataform tag, never a dataset or a table prefix.
-
 | Dataset | Object | What |
 | --- | --- | --- |
-| `raw` | | <!-- landed source data, or delete this row --> |
-| `processed` | | <!-- cleansed / typed --> |
-| `serving` | | <!-- marts, models, predictions --> |
-| `assertions` | | hard-fail checks; rows returned = failed run |
-| `assertions` | | warning views; non-empty is expected |
-
-`definitions/` mirrors this: `sources/`, `raw/`, `processed/`, `serving/`,
-`assertions/`, `monitoring/`.
+| `raw` | `sp500_daily_prices`, `sp500_companies` | Kaggle files. OpenTofu-owned tables, Dataform declarations. |
+| `raw` | `stress_scenarios` | OpenTofu-owned. Readers `INSERT` rows. |
+| `raw` | `portfolio_positions` | Dataform table, 30 synthetic positions, $100M |
+| `processed` | `daily_returns`, `standardized_returns` | Log returns; returns / trailing 63-day vol over the last 1,000 days |
+| `serving` | `timesfm_forecast`, `timesfm_forward_params` | Raw `AI.FORECAST` output; derived 1-day vol |
+| `serving` | `simulate_scenario` (procedure), `mc_simulated_pnl` | Monte Carlo. Both are Dataform `operations`. |
+| `serving` | `portfolio_var_summary`, `var_by_desk`, `var_contributions`, `historical_pnl` | Risk views |
+| `assertions` | `market_data_integrity`, `timesfm_forecast_complete`, `var_sanity` | Hard-fail checks |
+| `assertions` | `risk_model_health` | Warning view |
 
 ## Verifying
 
 ```sql
--- replace with the queries that prove THIS domain works
-SELECT * FROM `assertions.<assertion_name>`;   -- must be empty
+SELECT scenario_id, method, var_99_usd, es_99_usd, var_99_pct_notional
+FROM `serving.portfolio_var_summary` ORDER BY method, scenario_id;
+-- baseline monte_carlo: var_99_pct_notional between 1 and 3, es_99_usd > var_99_usd
+
+SELECT * FROM `assertions.market_data_integrity`;      -- must be empty
+SELECT * FROM `assertions.timesfm_forecast_complete`;  -- must be empty
+SELECT * FROM `assertions.var_sanity`;                 -- must be empty
 ```
 
-<!-- Include the check that proves the domain is actually working, not just
-     running. For a model that means the predictions stratify; for an
-     enrichment it means the output distribution is sane. A green pipeline
-     is not the same as a correct one. -->
+Correct, not just green: in `serving.var_by_desk`, desks with no stock in a scenario's sector have identical VaR in that scenario and in `baseline`.
 
 ## Gotchas
 
-<!-- Only traps specific to this pipeline. Some that recur across domains: -->
-
-- **Incremental tables don't retroactively change existing rows.** Editing the
-  SELECT only affects new rows; a full refresh re-pays for every model call.
-  For a small correction, converge existing rows with a targeted `UPDATE`.
+- **The simulation SQL lives only in `definitions/serving/simulate_scenario.sqlx`.** `mc_simulated_pnl` recreates the table and `CALL`s the procedure per scenario, so readers' `CALL`s and pipeline runs produce the same rows. Don't copy the simulation into another file.
+- **Hashes, not `RAND()`.** The path-to-day mapping and the noise are `FARM_FINGERPRINT` hashes so that scenarios share draws. Switching to `RAND()` breaks the stress-minus-baseline comparison.
+- **Without the noise term, 100K paths give only 1,000 distinct outcomes**, and tail metrics jump as tied blocks cross the cutoff.
+- **`AI.FORECAST` is not exactly repeatable.** A pipeline rerun can move VaR by about 0.6%. Docs say sample output differs slightly; keep it that way.
+- **`AI.FORECAST` dates steps on calendar days.** Step 1 after a Friday is a Saturday. Read it as the next trading day.
+- **Window functions run before `QUALIFY`.** Rank inside an already-filtered CTE (see `historical_pnl`).
+- **`raw.stress_scenarios` sector values must match `raw.sp500_companies.sector` exactly** (`Information Technology`, `Health Care`). `NULL` shocks every stock.
 - **Adding a stage in `definitions/` means adding it to `infra/datasets.tf`.**
-  Dataform auto-creates a missing dataset, so it silently works — then
-  `tofu destroy` orphans it, unlabeled and untracked.
-- **Gemini 3.x is global-endpoint only** and needs the full publisher URL; the
-  bare model slug is rejected.
-- **Non-interactive shells don't load `.envrc`**, so pass `--project` to
-  `bq`/`gcloud` rather than trusting the ambient project.
+- **Non-interactive shells don't load `.envrc`**, so pass `--project` to `bq` and `gcloud`.
+- **Guide and quick reference show real output.** After changing SQL that feeds them, rerun the queries and update the samples.
 
 ## Teardown
 
@@ -76,12 +75,8 @@ SELECT * FROM `assertions.<assertion_name>`;   -- must be empty
 cd infra && tofu destroy
 ```
 
-Removes the domain including dataset contents. Deliberately **not** removed,
-because Tofu didn't create them: the project and the state bucket
-(`gs://datacloud-market-risk-tfstate`) — destroying the bucket holding the state
-mid-destroy would be self-defeating.
+Removes everything Tofu created, including dataset contents, the landing bucket and the data agent. Left behind: the project and `gs://<project>-tfstate`.
 
 ## More
 
-`README.md` for the human-facing walkthrough, `docs/` for architecture and
-query guides.
+`README.md` for setup, `docs/01-value-at-risk.md` for the guide, `docs/architecture.md` for the simulation method and observed product behaviour.
