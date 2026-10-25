@@ -1,0 +1,84 @@
+config {
+  type: "operations",
+  schema: "serving",
+  name: "simulate_scenario",
+  hasOutput: true,
+  description: "SERVING: stored procedure that runs the 1-day Monte Carlo for one stress scenario and replaces that scenario's rows in mc_simulated_pnl",
+  tags: ["market_risk", "serving", "models"]
+}
+
+-- Filtered historical simulation. Each path replays one of the last 1,000
+-- trading days for every stock at once, so fat tails and cross-stock
+-- correlation come from real days rather than from a fitted model. Each stock's
+-- standardized move is rescaled by its TimesFM forward volatility.
+--
+-- The path-to-day mapping is a hash of the path number, not RAND(). Every
+-- scenario therefore replays the same days in the same paths, so the difference
+-- between a stress run and the baseline is the shock alone, and reruns give
+-- identical numbers.
+CREATE OR REPLACE PROCEDURE ${self()}(p_scenario_id STRING)
+BEGIN
+  DECLARE v_sector STRING;
+  DECLARE v_shock_pct FLOAT64;
+
+  SET (v_sector, v_shock_pct) = (
+    SELECT AS STRUCT sector, shock_pct
+    FROM ${ref("stress_scenarios")}
+    WHERE scenario_id = p_scenario_id
+  );
+
+  IF v_shock_pct IS NULL THEN
+    RAISE USING MESSAGE = FORMAT(
+      "Scenario '%s' not found. Insert it into raw.stress_scenarios first.", p_scenario_id);
+  END IF;
+
+  DELETE FROM ${resolve("mc_simulated_pnl")} WHERE scenario_id = p_scenario_id;
+
+  INSERT INTO ${resolve("mc_simulated_pnl")} (
+    scenario_id, path_id, historical_date, symbol, sector, desk, book,
+    notional_usd, sim_log_return, sim_pnl_usd
+  )
+  WITH paths AS (
+    SELECT
+      path_id,
+      1 + MOD(ABS(FARM_FINGERPRINT(FORMAT('path-%d', path_id))), 1000) AS day_idx
+    FROM UNNEST(GENERATE_ARRAY(1, ${dataform.projectConfig.vars.simulation_paths})) AS path_id
+  ),
+
+  positions AS (
+    SELECT p.symbol, f.sector, p.desk, p.book, p.notional_usd, f.timesfm_vol_1d
+    FROM ${ref("portfolio_positions")} AS p
+    JOIN ${ref("timesfm_forward_params")} AS f USING (symbol)
+  ),
+
+  simulated AS (
+    SELECT
+      paths.path_id,
+      s.date AS historical_date,
+      pos.symbol,
+      pos.sector,
+      pos.desk,
+      pos.book,
+      pos.notional_usd,
+      pos.timesfm_vol_1d * s.standardized_return
+        -- A scenario with no sector shocks every stock.
+        + IF(v_sector IS NULL OR pos.sector = v_sector, LN(1 + v_shock_pct), 0) AS sim_log_return
+    FROM paths
+    CROSS JOIN positions AS pos
+    JOIN ${ref("standardized_returns")} AS s
+      ON s.day_idx = paths.day_idx AND s.symbol = pos.symbol
+  )
+
+  SELECT
+    p_scenario_id,
+    path_id,
+    historical_date,
+    symbol,
+    sector,
+    desk,
+    book,
+    notional_usd,
+    sim_log_return,
+    notional_usd * (EXP(sim_log_return) - 1)
+  FROM simulated;
+END

@@ -1,0 +1,6 @@
+config {
+  type: "declaration",
+  schema: "raw",
+  name: "sp500_daily_prices",
+  description: "RAW: daily split- and dividend-adjusted OHLCV for current S&P 500 members, loaded from Kaggle by infra/scripts/load_market_data.sh"
+}

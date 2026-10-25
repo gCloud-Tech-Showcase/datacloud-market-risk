@@ -1,0 +1,45 @@
+config {
+  type: "table",
+  schema: "processed",
+  description: "PROCESSED: each stock's daily return divided by its trailing 63-day volatility, for the last 1,000 trading days. The Monte Carlo resamples whole days from here.",
+  tags: ["market_risk", "processed", "staging"],
+  bigquery: {
+    clusterBy: ["day_idx", "symbol"]
+  },
+  columns: {
+    day_idx: "Trading day number counting back from the as-of date: 1 is the as-of date, 1000 the oldest day kept",
+    date: "Trading date",
+    symbol: "Stock ticker",
+    log_return: "Daily log return",
+    trailing_vol_63d: "Standard deviation of the previous 63 daily log returns, excluding the day itself",
+    standardized_return: "log_return / trailing_vol_63d. Keeps the shape of the day's move (fat tails, co-movement) without its volatility level."
+  }
+}
+
+WITH vol AS (
+  SELECT
+    symbol,
+    date,
+    log_return,
+    STDDEV_SAMP(log_return) OVER (
+      PARTITION BY symbol ORDER BY date ROWS BETWEEN 63 PRECEDING AND 1 PRECEDING
+    ) AS trailing_vol_63d
+  FROM ${ref("daily_returns")}
+  WHERE log_return IS NOT NULL
+),
+
+trading_days AS (
+  SELECT date, ROW_NUMBER() OVER (ORDER BY date DESC) AS day_idx
+  FROM (SELECT DISTINCT date FROM vol)
+)
+
+SELECT
+  d.day_idx,
+  v.date,
+  v.symbol,
+  v.log_return,
+  v.trailing_vol_63d,
+  SAFE_DIVIDE(v.log_return, v.trailing_vol_63d) AS standardized_return
+FROM vol AS v
+JOIN trading_days AS d USING (date)
+WHERE d.day_idx <= 1000

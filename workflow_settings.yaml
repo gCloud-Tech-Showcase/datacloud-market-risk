@@ -3,3 +3,8 @@ defaultLocation: US
 defaultDataset: serving
 # NOT `assertionSchema` — the WorkflowSettings proto rejects that name.
 defaultAssertionDataset: assertions
+vars:
+  # The market data refreshes daily. Pinning the as-of date keeps every run on
+  # the same history; prices after this date are ignored.
+  as_of_date: "2026-10-23"
+  simulation_paths: "100000"

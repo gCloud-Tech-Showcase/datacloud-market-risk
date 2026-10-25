@@ -1,0 +1,42 @@
+config {
+  type: "assertion",
+  description: "QUALITY: baseline Monte Carlo risk is coherent: every path simulated, ES at or above VaR, and 99% VaR between 0.5% and 5% of notional",
+  tags: ["market_risk", "assertions", "quality"]
+}
+
+-- The 0.5% to 5% band is deliberately wider than the 1% to 3% expected for a
+-- diversified large-cap book. It catches broken units or a failed scaling step
+-- without failing on a genuinely volatile market.
+WITH baseline AS (
+  SELECT *
+  FROM ${ref("portfolio_var_summary")}
+  WHERE method = 'monte_carlo' AND scenario_id = 'baseline'
+),
+
+path_counts AS (
+  SELECT scenario_id, COUNT(DISTINCT path_id) AS paths
+  FROM ${ref("mc_simulated_pnl")}
+  GROUP BY scenario_id
+)
+
+SELECT 'baseline' AS scenario_id, 'no baseline Monte Carlo result' AS problem
+FROM (SELECT COUNT(*) AS n FROM baseline)
+WHERE n = 0
+
+UNION ALL
+
+SELECT scenario_id, FORMAT('%d paths simulated, expected ${dataform.projectConfig.vars.simulation_paths}', paths)
+FROM path_counts
+WHERE paths != ${dataform.projectConfig.vars.simulation_paths}
+
+UNION ALL
+
+SELECT scenario_id, 'Expected Shortfall below VaR'
+FROM baseline
+WHERE es_99_usd < var_99_usd OR es_95_usd < var_95_usd
+
+UNION ALL
+
+SELECT scenario_id, FORMAT('99%% VaR is %.2f%% of notional', var_99_pct_notional)
+FROM baseline
+WHERE var_99_pct_notional NOT BETWEEN 0.5 AND 5

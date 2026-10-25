@@ -1,0 +1,38 @@
+config {
+  type: "view",
+  schema: "serving",
+  description: "SERVING: standalone 1-day VaR and Expected Shortfall per desk and stress scenario, from the Monte Carlo",
+  tags: ["market_risk", "serving", "marts"],
+  columns: {
+    scenario_id: "Stress scenario",
+    desk: "Trading desk",
+    desk_notional_usd: "Total notional held by the desk",
+    var_95_usd: "Desk 1-day 95% VaR on its own, as a positive loss",
+    var_99_usd: "Desk 1-day 99% VaR on its own, as a positive loss",
+    es_99_usd: "Desk 1-day 99% Expected Shortfall on its own"
+  }
+}
+
+WITH desk_paths AS (
+  SELECT scenario_id, desk, path_id, SUM(sim_pnl_usd) AS pnl, SUM(notional_usd) AS desk_notional_usd
+  FROM ${ref("mc_simulated_pnl")}
+  GROUP BY scenario_id, desk, path_id
+),
+
+cutoffs AS (
+  SELECT
+    *,
+    PERCENTILE_CONT(pnl, 0.05) OVER (PARTITION BY scenario_id, desk) AS p05,
+    PERCENTILE_CONT(pnl, 0.01) OVER (PARTITION BY scenario_id, desk) AS p01
+  FROM desk_paths
+)
+
+SELECT
+  scenario_id,
+  desk,
+  ANY_VALUE(desk_notional_usd) AS desk_notional_usd,
+  -ANY_VALUE(p05) AS var_95_usd,
+  -ANY_VALUE(p01) AS var_99_usd,
+  -AVG(IF(pnl <= p01, pnl, NULL)) AS es_99_usd
+FROM cutoffs
+GROUP BY scenario_id, desk

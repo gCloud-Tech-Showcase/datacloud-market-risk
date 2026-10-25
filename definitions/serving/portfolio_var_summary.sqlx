@@ -1,0 +1,74 @@
+config {
+  type: "view",
+  schema: "serving",
+  description: "SERVING: portfolio 1-day VaR and Expected Shortfall at 95% and 99%, per stress scenario from the Monte Carlo, plus historical VaR for comparison",
+  tags: ["market_risk", "serving", "marts"],
+  columns: {
+    scenario_id: "Stress scenario. Historical rows use 'baseline'.",
+    scenario_description: "What the scenario shocks",
+    method: "monte_carlo: 100K-path simulation scaled by TimesFM volatility. historical: the portfolio's actual P&L over the last 500 trading days, at today's positions.",
+    var_95_usd: "1-day 95% Value at Risk: the loss exceeded on only 5% of days, as a positive number",
+    var_99_usd: "1-day 99% Value at Risk: the loss exceeded on only 1% of days, as a positive number",
+    es_95_usd: "1-day 95% Expected Shortfall: the average loss on the days beyond the 95% VaR",
+    es_99_usd: "1-day 99% Expected Shortfall: the average loss on the days beyond the 99% VaR",
+    notional_usd: "Total portfolio notional",
+    var_99_pct_notional: "var_99_usd as a percentage of notional"
+  }
+}
+
+WITH mc_paths AS (
+  SELECT scenario_id, path_id, SUM(sim_pnl_usd) AS pnl
+  FROM ${ref("mc_simulated_pnl")}
+  GROUP BY scenario_id, path_id
+),
+
+historical_days AS (
+  SELECT 'baseline' AS scenario_id, r.date, SUM(p.notional_usd * (EXP(r.log_return) - 1)) AS pnl
+  FROM ${ref("daily_returns")} AS r
+  JOIN ${ref("portfolio_positions")} AS p USING (symbol)
+  WHERE r.log_return IS NOT NULL
+  GROUP BY r.date
+  QUALIFY ROW_NUMBER() OVER (ORDER BY r.date DESC) <= 500
+),
+
+outcomes AS (
+  SELECT 'monte_carlo' AS method, scenario_id, pnl FROM mc_paths
+  UNION ALL
+  SELECT 'historical', scenario_id, pnl FROM historical_days
+),
+
+cutoffs AS (
+  SELECT
+    method,
+    scenario_id,
+    pnl,
+    PERCENTILE_CONT(pnl, 0.05) OVER (PARTITION BY method, scenario_id) AS p05,
+    PERCENTILE_CONT(pnl, 0.01) OVER (PARTITION BY method, scenario_id) AS p01
+  FROM outcomes
+),
+
+risk AS (
+  SELECT
+    scenario_id,
+    method,
+    -ANY_VALUE(p05) AS var_95_usd,
+    -ANY_VALUE(p01) AS var_99_usd,
+    -AVG(IF(pnl <= p05, pnl, NULL)) AS es_95_usd,
+    -AVG(IF(pnl <= p01, pnl, NULL)) AS es_99_usd
+  FROM cutoffs
+  GROUP BY scenario_id, method
+)
+
+SELECT
+  r.scenario_id,
+  s.description AS scenario_description,
+  r.method,
+  r.var_95_usd,
+  r.var_99_usd,
+  r.es_95_usd,
+  r.es_99_usd,
+  n.notional_usd,
+  100 * SAFE_DIVIDE(r.var_99_usd, n.notional_usd) AS var_99_pct_notional
+FROM risk AS r
+LEFT JOIN ${ref("stress_scenarios")} AS s USING (scenario_id)
+CROSS JOIN (SELECT SUM(notional_usd) AS notional_usd FROM ${ref("portfolio_positions")}) AS n

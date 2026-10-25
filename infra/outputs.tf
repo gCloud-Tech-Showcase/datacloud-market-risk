@@ -47,3 +47,13 @@ output "dataform_workflow_config_name" {
 }
 
 
+
+output "landing_bucket" {
+  description = "GCS bucket the Kaggle files are staged in"
+  value       = google_storage_bucket.landing.name
+}
+
+output "data_agent" {
+  description = "Resource name of the Conversational Analytics data agent"
+  value       = google_gemini_data_analytics_data_agent.market_risk.name
+}

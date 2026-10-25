@@ -35,6 +35,12 @@ variable "git_repo_url" {
 
 
 
+variable "kaggle_dataset" {
+  description = "Kaggle dataset (owner/name) that infra/scripts/load_market_data.sh downloads. It must contain sp500_stocks.csv and sp500_companies.csv in the same columns."
+  type        = string
+  default     = "darkmatternet/s-and-p-500-stocks-25-years-of-data-updated-daily"
+}
+
 variable "run_pipeline_on_apply" {
   description = "Trigger a Dataform run (compile main + workflow invocation as the runner SA) as the final step of apply and block until it finishes, so a fresh apply leaves the domain fully built. Runs once on first apply; set false to skip."
   type        = bool

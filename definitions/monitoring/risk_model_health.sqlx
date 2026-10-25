@@ -1,0 +1,54 @@
+config {
+  type: "view",
+  schema: "assertions",
+  description: "QUALITY: risk-model inputs outside their usual range. Some rows are normal, for example in a regime change; watch for many at once.",
+  tags: ["market_risk", "monitoring", "quality"],
+  columns: {
+    check_name: "Which check flagged the row",
+    symbol: "Stock ticker, or ALL for portfolio-level checks",
+    value: "The observed value",
+    expected_range: "The range the check expects"
+  }
+}
+
+WITH positions AS (
+  SELECT symbol, desk FROM ${ref("portfolio_positions")}
+),
+
+standardized_scale AS (
+  SELECT symbol, STDDEV_SAMP(standardized_return) AS value
+  FROM ${ref("standardized_returns")}
+  WHERE symbol IN (SELECT symbol FROM positions)
+  GROUP BY symbol
+),
+
+vol_ratio AS (
+  SELECT symbol, SAFE_DIVIDE(timesfm_vol_1d, historical_vol_1d) AS value
+  FROM ${ref("timesfm_forward_params")}
+),
+
+diversification AS (
+  SELECT
+    SAFE_DIVIDE(
+      (SELECT var_99_usd FROM ${ref("portfolio_var_summary")} WHERE method = 'monte_carlo' AND scenario_id = 'baseline'),
+      (SELECT SUM(var_99_usd) FROM ${ref("var_by_desk")} WHERE scenario_id = 'baseline')
+    ) AS value
+)
+
+-- Standardized returns divide by a trailing volatility, so their spread should
+-- sit near 1. Far from 1 means the 63-day window is lagging a regime change.
+SELECT 'standardized return std' AS check_name, symbol, value, '0.8 to 1.25' AS expected_range
+FROM standardized_scale
+WHERE value NOT BETWEEN 0.8 AND 1.25
+
+UNION ALL
+
+SELECT 'TimesFM vol / historical vol', symbol, value, '0.5 to 1.5'
+FROM vol_ratio
+WHERE value NOT BETWEEN 0.5 AND 1.5
+
+UNION ALL
+
+SELECT 'portfolio VaR / sum of desk VaR', 'ALL', value, 'below 1 (diversification)'
+FROM diversification
+WHERE value >= 1

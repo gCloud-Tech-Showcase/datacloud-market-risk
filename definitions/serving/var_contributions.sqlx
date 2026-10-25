@@ -1,0 +1,45 @@
+config {
+  type: "view",
+  schema: "serving",
+  description: "SERVING: each position's contribution to portfolio tail loss: its average P&L on the paths where the whole portfolio is in its worst 1%",
+  tags: ["market_risk", "serving", "marts"],
+  columns: {
+    scenario_id: "Stress scenario",
+    symbol: "Stock ticker",
+    sector: "GICS sector",
+    desk: "Trading desk",
+    notional_usd: "Position size in US dollars",
+    es_99_contribution_usd: "Average loss of this position on the portfolio's worst 1% of paths, as a positive number. Contributions add up to the portfolio's 99% Expected Shortfall.",
+    share_of_es_99_pct: "es_99_contribution_usd as a percentage of the portfolio's 99% Expected Shortfall"
+  }
+}
+
+WITH portfolio_paths AS (
+  SELECT scenario_id, path_id, SUM(sim_pnl_usd) AS pnl
+  FROM ${ref("mc_simulated_pnl")}
+  GROUP BY scenario_id, path_id
+),
+
+tail_paths AS (
+  SELECT scenario_id, path_id
+  FROM portfolio_paths
+  QUALIFY pnl <= PERCENTILE_CONT(pnl, 0.01) OVER (PARTITION BY scenario_id)
+),
+
+contributions AS (
+  SELECT
+    m.scenario_id,
+    m.symbol,
+    ANY_VALUE(m.sector) AS sector,
+    ANY_VALUE(m.desk) AS desk,
+    ANY_VALUE(m.notional_usd) AS notional_usd,
+    -AVG(m.sim_pnl_usd) AS es_99_contribution_usd
+  FROM ${ref("mc_simulated_pnl")} AS m
+  JOIN tail_paths AS t USING (scenario_id, path_id)
+  GROUP BY m.scenario_id, m.symbol
+)
+
+SELECT
+  *,
+  100 * SAFE_DIVIDE(es_99_contribution_usd, SUM(es_99_contribution_usd) OVER (PARTITION BY scenario_id)) AS share_of_es_99_pct
+FROM contributions

@@ -1,0 +1,28 @@
+config {
+  type: "table",
+  schema: "processed",
+  description: "PROCESSED: daily log returns per stock up to the pinned as-of date, with its GICS sector",
+  tags: ["market_risk", "processed", "staging"],
+  bigquery: {
+    partitionBy: "date",
+    clusterBy: ["symbol"]
+  },
+  columns: {
+    symbol: "Stock ticker",
+    sector: "GICS sector",
+    date: "Trading date",
+    close: "Split- and dividend-adjusted closing price",
+    log_return: "Natural log of today's close over the previous trading day's close. NULL on a stock's first day."
+  }
+}
+
+SELECT
+  p.symbol,
+  c.sector,
+  p.date,
+  p.close,
+  LN(SAFE_DIVIDE(p.close, LAG(p.close) OVER (PARTITION BY p.symbol ORDER BY p.date))) AS log_return
+FROM ${ref("sp500_daily_prices")} AS p
+JOIN ${ref("sp500_companies")} AS c USING (symbol)
+WHERE p.date BETWEEN '2016-01-01' AND '${dataform.projectConfig.vars.as_of_date}'
+  AND p.close > 0

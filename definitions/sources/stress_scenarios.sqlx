@@ -1,0 +1,6 @@
+config {
+  type: "declaration",
+  schema: "raw",
+  name: "stress_scenarios",
+  description: "RAW: stress scenarios to simulate. Created by OpenTofu so you can insert rows without a pipeline run."
+}

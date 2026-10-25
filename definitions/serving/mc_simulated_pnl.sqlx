@@ -1,0 +1,30 @@
+config {
+  type: "operations",
+  schema: "serving",
+  name: "mc_simulated_pnl",
+  hasOutput: true,
+  description: "SERVING: simulated 1-day P&L per Monte Carlo path, position and stress scenario",
+  tags: ["market_risk", "serving", "models"]
+}
+
+-- An operations block rather than a table, because the same rows are also
+-- written by CALL serving.simulate_scenario() when you add a scenario. Each run
+-- rebuilds the table and simulates every scenario in raw.stress_scenarios.
+CREATE OR REPLACE TABLE ${self()} (
+  scenario_id STRING OPTIONS(description = "Stress scenario from raw.stress_scenarios. 'baseline' has no shock."),
+  path_id INT64 OPTIONS(description = "Monte Carlo path number. Group by scenario_id and path_id for portfolio P&L per path."),
+  historical_date DATE OPTIONS(description = "Historical trading day whose standardized moves this path replays"),
+  symbol STRING OPTIONS(description = "Stock ticker"),
+  sector STRING OPTIONS(description = "GICS sector of the stock"),
+  desk STRING OPTIONS(description = "Trading desk that holds the position: Growth Equities, Value Equities or Defensive Equities"),
+  book STRING OPTIONS(description = "Book within the desk, such as US Tech or US Energy"),
+  notional_usd FLOAT64 OPTIONS(description = "Position size in US dollars"),
+  sim_log_return FLOAT64 OPTIONS(description = "Simulated 1-day log return of the stock on this path, including any stress shock"),
+  sim_pnl_usd FLOAT64 OPTIONS(description = "Simulated 1-day profit and loss of the position in US dollars. Negative is a loss.")
+)
+CLUSTER BY scenario_id, desk
+OPTIONS(description = "SERVING: simulated 1-day P&L of Pulsar Capital's equity positions. One row per stress scenario, Monte Carlo path and position. Portfolio P&L for a path is SUM(sim_pnl_usd) over rows with the same scenario_id and path_id.");
+
+FOR scenario IN (SELECT scenario_id FROM ${ref("stress_scenarios")} ORDER BY scenario_id) DO
+  CALL ${ref("simulate_scenario")}(scenario.scenario_id);
+END FOR;

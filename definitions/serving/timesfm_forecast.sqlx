@@ -1,0 +1,30 @@
+config {
+  type: "table",
+  schema: "serving",
+  description: "SERVING: TimesFM forecast of each portfolio stock's closing price for the next 5 trading days, with a 99% prediction interval. Raw AI.FORECAST output.",
+  tags: ["market_risk", "serving", "ml"],
+  columns: {
+    symbol: "Stock ticker",
+    forecast_timestamp: "Forecast step. TimesFM infers a daily step from the input, so steps land on calendar days (step 1 after a Friday is the Saturday). Read step 1 as the next trading day.",
+    forecast_value: "Median forecast of the closing price",
+    confidence_level: "Coverage of the prediction interval (0.99)",
+    prediction_interval_lower_bound: "Lower bound of the 99% prediction interval for the closing price",
+    prediction_interval_upper_bound: "Upper bound of the 99% prediction interval for the closing price",
+    ai_forecast_status: "Empty when the series forecast succeeded, otherwise the error"
+  }
+}
+
+SELECT *
+FROM AI.FORECAST(
+  (
+    SELECT symbol, TIMESTAMP(date) AS ts, close
+    FROM ${ref("daily_returns")}
+    WHERE symbol IN (SELECT symbol FROM ${ref("portfolio_positions")})
+      AND date > DATE_SUB('${dataform.projectConfig.vars.as_of_date}', INTERVAL 4 YEAR)
+  ),
+  data_col => 'close',
+  timestamp_col => 'ts',
+  id_cols => ['symbol'],
+  horizon => 5,
+  confidence_level => 0.99
+)

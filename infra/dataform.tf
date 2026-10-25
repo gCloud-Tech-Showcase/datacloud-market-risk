@@ -176,6 +176,7 @@ resource "terraform_data" "run_pipeline" {
     google_project_iam_member.runner_bq_job_user,
     google_project_iam_member.runner_bq_data_editor,
     google_project_iam_member.runner_vertex_ai_user,
+    terraform_data.load_market_data,
   ]
 
   provisioner "local-exec" {

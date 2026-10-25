@@ -26,6 +26,11 @@ resource "google_project_service" "apis" {
     # and for any Gemini call from BigQuery. Keep unless the domain is pure SQL.
     "aiplatform.googleapis.com",
 
+    "storage.googleapis.com",             # landing bucket for the Kaggle files
+    "geminidataanalytics.googleapis.com", # Conversational Analytics data agent
+    "cloudaicompanion.googleapis.com",    # Gemini in BigQuery, which chat with the agent runs on
+    "dataplex.googleapis.com",            # table metadata the agent reads as knowledge sources
+
 
   ])
 

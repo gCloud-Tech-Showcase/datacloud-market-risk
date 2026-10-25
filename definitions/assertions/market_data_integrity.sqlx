@@ -1,0 +1,42 @@
+config {
+  type: "assertion",
+  description: "QUALITY: every portfolio stock has a price on the as-of date, 1,000 days of standardized returns, and no daily move beyond +/-40% in that window",
+  tags: ["market_risk", "assertions", "quality"]
+}
+
+-- A move beyond +/-40% on a large-cap name in the simulation window is almost
+-- always an unadjusted split or a bad tick. One such day would dominate the 99%
+-- tail, so it fails the run rather than being simulated.
+WITH positions AS (
+  SELECT symbol FROM ${ref("portfolio_positions")}
+),
+
+as_of_prices AS (
+  SELECT symbol
+  FROM ${ref("daily_returns")}
+  WHERE date = '${dataform.projectConfig.vars.as_of_date}'
+),
+
+window_coverage AS (
+  SELECT symbol, COUNTIF(standardized_return IS NOT NULL) AS usable_days, MAX(ABS(log_return)) AS max_abs_log_return
+  FROM ${ref("standardized_returns")}
+  WHERE symbol IN (SELECT symbol FROM positions)
+  GROUP BY symbol
+)
+
+SELECT symbol, 'no price on the as-of date' AS problem
+FROM positions
+WHERE symbol NOT IN (SELECT symbol FROM as_of_prices)
+
+UNION ALL
+
+SELECT p.symbol, FORMAT('only %d of 1000 simulation days usable', COALESCE(w.usable_days, 0))
+FROM positions AS p
+LEFT JOIN window_coverage AS w USING (symbol)
+WHERE COALESCE(w.usable_days, 0) < 1000
+
+UNION ALL
+
+SELECT symbol, FORMAT('daily move of %.0f%% in the simulation window', 100 * (EXP(max_abs_log_return) - 1))
+FROM window_coverage
+WHERE max_abs_log_return > LN(1.4)

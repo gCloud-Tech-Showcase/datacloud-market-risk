@@ -1,0 +1,17 @@
+config {
+  type: "assertion",
+  description: "QUALITY: TimesFM returned a successful forecast and a positive volatility for every portfolio stock",
+  tags: ["market_risk", "assertions", "quality"]
+}
+
+SELECT p.symbol, COALESCE(NULLIF(f.ai_forecast_status, ''), 'no forecast row') AS problem
+FROM ${ref("portfolio_positions")} AS p
+LEFT JOIN ${ref("timesfm_forecast")} AS f USING (symbol)
+WHERE f.symbol IS NULL OR f.ai_forecast_status != ''
+
+UNION ALL
+
+SELECT p.symbol, 'TimesFM volatility missing or not positive'
+FROM ${ref("portfolio_positions")} AS p
+LEFT JOIN ${ref("timesfm_forward_params")} AS v USING (symbol)
+WHERE v.timesfm_vol_1d IS NULL OR v.timesfm_vol_1d <= 0

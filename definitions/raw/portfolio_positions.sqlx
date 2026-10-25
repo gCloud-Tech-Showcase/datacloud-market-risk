@@ -1,0 +1,46 @@
+config {
+  type: "table",
+  schema: "raw",
+  description: "RAW: Pulsar Capital's equity positions, about $100M across three desks. Synthetic.",
+  tags: ["market_risk", "raw", "sources"],
+  columns: {
+    symbol: "Stock ticker",
+    desk: "Trading desk that holds the position: Growth Equities, Value Equities or Defensive Equities",
+    book: "Book within the desk, such as US Tech or US Energy",
+    notional_usd: "Position size in US dollars. Long positions only."
+  }
+}
+
+SELECT symbol, desk, book, notional_usd
+FROM UNNEST([
+  STRUCT('AAPL' AS symbol, 'Growth Equities' AS desk, 'US Tech' AS book, 7000000 AS notional_usd),
+  ('MSFT', 'Growth Equities', 'US Tech', 7000000),
+  ('NVDA', 'Growth Equities', 'US Tech', 6000000),
+  ('AVGO', 'Growth Equities', 'US Tech', 3500000),
+  ('ORCL', 'Growth Equities', 'US Tech', 2500000),
+  ('CRM', 'Growth Equities', 'US Tech', 2000000),
+  ('AMD', 'Growth Equities', 'US Tech', 2000000),
+  ('AMZN', 'Growth Equities', 'US Consumer', 6000000),
+  ('TSLA', 'Growth Equities', 'US Consumer', 3000000),
+  ('HD', 'Growth Equities', 'US Consumer', 2500000),
+  ('MCD', 'Growth Equities', 'US Consumer', 2000000),
+  ('NKE', 'Growth Equities', 'US Consumer', 1500000),
+  ('JPM', 'Value Equities', 'US Financials', 6000000),
+  ('BAC', 'Value Equities', 'US Financials', 3500000),
+  ('GS', 'Value Equities', 'US Financials', 3000000),
+  ('MS', 'Value Equities', 'US Financials', 2500000),
+  ('WFC', 'Value Equities', 'US Financials', 2500000),
+  ('BLK', 'Value Equities', 'US Financials', 2000000),
+  ('SCHW', 'Value Equities', 'US Financials', 1500000),
+  ('XOM', 'Value Equities', 'US Energy', 5000000),
+  ('CVX', 'Value Equities', 'US Energy', 3000000),
+  ('COP', 'Value Equities', 'US Energy', 2000000),
+  ('SLB', 'Value Equities', 'US Energy', 1500000),
+  ('EOG', 'Value Equities', 'US Energy', 1500000),
+  ('LLY', 'Defensive Equities', 'US Healthcare', 5500000),
+  ('UNH', 'Defensive Equities', 'US Healthcare', 4500000),
+  ('JNJ', 'Defensive Equities', 'US Healthcare', 3500000),
+  ('ABBV', 'Defensive Equities', 'US Healthcare', 3000000),
+  ('MRK', 'Defensive Equities', 'US Healthcare', 2500000),
+  ('PFE', 'Defensive Equities', 'US Healthcare', 2000000)
+])

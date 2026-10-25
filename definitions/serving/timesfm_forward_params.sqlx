@@ -1,0 +1,56 @@
+config {
+  type: "view",
+  schema: "serving",
+  description: "SERVING: one row per portfolio stock with the 1-day volatility implied by TimesFM, next to its trailing one-year volatility. TimesFM volatility drives the Monte Carlo.",
+  tags: ["market_risk", "serving", "ml"],
+  columns: {
+    symbol: "Stock ticker",
+    sector: "GICS sector",
+    last_close: "Closing price on the as-of date",
+    forecast_close: "TimesFM median close for the next trading day",
+    forecast_low_99: "Lower bound of TimesFM's 99% interval for the next trading day's close",
+    forecast_high_99: "Upper bound of TimesFM's 99% interval for the next trading day's close",
+    timesfm_vol_1d: "1-day volatility implied by the interval: ln(high / low) / (2 x 2.5758)",
+    historical_vol_1d: "Standard deviation of daily log returns over the last 252 trading days",
+    timesfm_vol_annualized: "timesfm_vol_1d x sqrt(252)",
+    historical_vol_annualized: "historical_vol_1d x sqrt(252)"
+  }
+}
+
+-- 2.5758 is the standard normal quantile for a two-sided 99% interval. The
+-- median forecast is not used as drift: over one day its implied move is noise
+-- that would dominate VaR, so the simulation assumes zero drift.
+WITH next_day AS (
+  SELECT
+    symbol,
+    forecast_value,
+    prediction_interval_lower_bound,
+    prediction_interval_upper_bound
+  FROM ${ref("timesfm_forecast")}
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY forecast_timestamp) = 1
+),
+
+history AS (
+  SELECT
+    symbol,
+    ANY_VALUE(sector) AS sector,
+    STDDEV_SAMP(log_return) AS historical_vol_1d,
+    ARRAY_AGG(close ORDER BY date DESC LIMIT 1)[OFFSET(0)] AS last_close
+  FROM ${ref("daily_returns")}
+  WHERE date > DATE_SUB('${dataform.projectConfig.vars.as_of_date}', INTERVAL 365 DAY)
+  GROUP BY symbol
+)
+
+SELECT
+  n.symbol,
+  h.sector,
+  h.last_close,
+  n.forecast_value AS forecast_close,
+  n.prediction_interval_lower_bound AS forecast_low_99,
+  n.prediction_interval_upper_bound AS forecast_high_99,
+  LN(SAFE_DIVIDE(n.prediction_interval_upper_bound, n.prediction_interval_lower_bound)) / (2 * 2.5758) AS timesfm_vol_1d,
+  h.historical_vol_1d,
+  LN(SAFE_DIVIDE(n.prediction_interval_upper_bound, n.prediction_interval_lower_bound)) / (2 * 2.5758) * SQRT(252) AS timesfm_vol_annualized,
+  h.historical_vol_1d * SQRT(252) AS historical_vol_annualized
+FROM next_day AS n
+JOIN history AS h USING (symbol)
