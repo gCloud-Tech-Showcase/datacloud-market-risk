@@ -47,12 +47,12 @@ run_once() {
     return 2
   fi
 
-  # 1. Compile main -> compilation result. defaultDatabase overrides the
-  #    defaultProject in workflow_settings.yaml; without it a deployment in any
-  #    other project writes to the project named in that file.
+  # 1. Compile main -> compilation result. defaultDatabase and defaultLocation
+  #    override workflow_settings.yaml; without them a deployment in any other
+  #    project or region writes to the project and location named in that file.
   cr="$(curl -sS -X POST "$BASE/compilationResults" \
         -H "Authorization: Bearer $tok" -H "Content-Type: application/json" \
-        -d "{\"gitCommitish\":\"main\",\"codeCompilationConfig\":{\"defaultDatabase\":\"${PROJECT}\"}}")"
+        -d "{\"gitCommitish\":\"main\",\"codeCompilationConfig\":{\"defaultDatabase\":\"${PROJECT}\",\"defaultLocation\":\"${REGION}\"}}")"
   crname="$(printf '%s' "$cr" | json_field name)"
   if [ -z "$crname" ]; then
     echo "  ! compilation request failed: $cr"

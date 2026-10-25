@@ -60,10 +60,9 @@ if [[ -z "$PROJECT_ID" ]]; then
   PROJECT_ID="$(tf_default project_id)"
 fi
 if [[ -z "$LOCATION" ]]; then
-  # State bucket follows dataset_location (US multiregion), NOT region: state is
-  # the one artifact that can't be rebuilt, so it gets the most durable home.
-  LOCATION="$(tf_default dataset_location)"
-  LOCATION="${LOCATION:-US}"
+  # State bucket lives in the same region as everything else.
+  LOCATION="$(tf_default region)"
+  LOCATION="${LOCATION:-us-central1}"
 fi
 
 if [[ -z "$PROJECT_ID" ]]; then

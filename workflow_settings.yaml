@@ -1,5 +1,7 @@
 defaultProject: datacloud-market-risk
-defaultLocation: US
+# Keep equal to var.region in infra/variables.tf. run_pipeline.sh overrides it
+# with var.region, but the Dataform console compiles with this value.
+defaultLocation: us-central1
 defaultDataset: serving
 # NOT `assertionSchema` — the WorkflowSettings proto rejects that name.
 defaultAssertionDataset: assertions

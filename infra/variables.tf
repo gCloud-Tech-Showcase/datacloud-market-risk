@@ -14,15 +14,9 @@ variable "project_id" {
 }
 
 variable "region" {
-  description = "The GCP region for regional resources (Dataform, and the bucket if the unstructured add-on is used)"
+  description = "The one region for every resource: BigQuery datasets, buckets, Dataform, notebooks and the catalog. workflow_settings.yaml and notebooks/run-pipeline.ipynb repeat it, so change them too."
   type        = string
   default     = "us-central1"
-}
-
-variable "dataset_location" {
-  description = "BigQuery dataset location (multi-region). Also where setup.sh puts the state bucket — state is the one artifact that can't be rebuilt, so it gets the most durable home."
-  type        = string
-  default     = "US"
 }
 
 # [visibility:public]

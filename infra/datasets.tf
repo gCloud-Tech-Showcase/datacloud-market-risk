@@ -30,7 +30,7 @@ resource "google_bigquery_dataset" "stages" {
   }
 
   dataset_id  = each.key
-  location    = var.dataset_location
+  location    = var.region
   description = each.value
 
   # Rebuildable by design: let `tofu destroy` remove these even though Dataform

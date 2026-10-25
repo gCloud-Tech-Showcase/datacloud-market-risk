@@ -108,7 +108,7 @@ resource "google_dataform_repository_release_config" "main" {
 
   code_compilation_config {
     default_database = var.project_id
-    default_location = var.dataset_location
+    default_location = var.region
   }
 
   depends_on = [
