@@ -167,7 +167,7 @@ LIMIT 5;
 +------------+------------+----------------+
 ```
 
-The 500-day lookback contains the April 2025 tariff selloff. The Monte Carlo replays those days too, but at today's lower TimesFM volatility, so their weight in the tail shrinks.
+Two things separate the numbers. The historical view uses the last 500 trading days and the simulation draws from the last 1,000, so the April 2025 tariff selloff weighs more in the historical tail. That window difference is most of the gap. The simulation also rescales each day to TimesFM's volatility, which accounts for a smaller part.
 
 ---
 
@@ -213,7 +213,7 @@ ORDER BY desk;
 
 *Console on 2026-10-25.*
 
-Only Growth Equities moves, because it holds all the Tech stocks. The other desks are unchanged to the dollar: every scenario replays the same draws on the same paths, so the shock is the only difference.
+Only Growth Equities moves, because it holds all the Information Technology stocks. GOOGL sits in the US Tech book but is Communication Services under GICS, so this shock does not hit it. The other desks are unchanged to the dollar: every scenario replays the same draws on the same paths, so the shock is the only difference.
 
 A shock is applied on top of every path, so the result is VaR given the shock: the baseline risk plus the shock's loss. It is not Basel stressed VaR, which recalibrates the model to a stressed historical period.
 
