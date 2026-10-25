@@ -29,7 +29,7 @@ resource "google_project_service" "apis" {
     "storage.googleapis.com",             # landing bucket for the Kaggle files
     "geminidataanalytics.googleapis.com", # Conversational Analytics data agent
     "cloudaicompanion.googleapis.com",    # Gemini in BigQuery, which chat with the agent runs on
-    "dataplex.googleapis.com",            # table metadata the agent reads as knowledge sources
+    "dataplex.googleapis.com",            # Knowledge Catalog: data products, glossary, aspects, scans; metadata the agent reads
     "compute.googleapis.com",             # Colab Enterprise runtimes for the BigQuery Studio notebooks
 
 

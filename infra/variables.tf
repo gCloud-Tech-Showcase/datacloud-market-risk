@@ -52,3 +52,15 @@ variable "enable_scheduled_runs" {
   default     = false
 }
 
+
+variable "data_product_owner" {
+  description = "Email listed as the owner of the three data products. Empty means the account running tofu apply, or the pipeline service account if that email is not available."
+  type        = string
+  default     = ""
+}
+
+variable "data_product_consumer_group" {
+  description = "Optional Google group (email) granted read access to every data product asset, as a consumer team would be. Empty means no access group."
+  type        = string
+  default     = ""
+}

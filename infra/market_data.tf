@@ -8,6 +8,7 @@
 resource "google_bigquery_table" "sp500_daily_prices" {
   dataset_id          = google_bigquery_dataset.stages["raw"].dataset_id
   table_id            = "sp500_daily_prices"
+  labels              = local.insights_labels["sp500_daily_prices"]
   description         = "RAW: daily split- and dividend-adjusted OHLCV for current S&P 500 members. Source: kaggle.com/datasets/${var.kaggle_dataset} (CC0)."
   deletion_protection = false
 
@@ -26,6 +27,7 @@ resource "google_bigquery_table" "sp500_daily_prices" {
 resource "google_bigquery_table" "sp500_companies" {
   dataset_id          = google_bigquery_dataset.stages["raw"].dataset_id
   table_id            = "sp500_companies"
+  labels              = local.insights_labels["sp500_companies"]
   description         = "RAW: one row per current S&P 500 member. Source: kaggle.com/datasets/${var.kaggle_dataset} (CC0)."
   deletion_protection = false
 
