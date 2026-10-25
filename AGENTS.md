@@ -68,6 +68,7 @@ Correct, not just green: in `serving.var_by_desk`, desks with no stock in a scen
 - **`raw.stress_scenarios` sector values must match `raw.sp500_companies.sector` exactly** (`Information Technology`, `Health Care`). `NULL` shocks every stock.
 - **Any edit to `infra/agent.tf` creates a new data agent with a new ID, then deletes the old one.** The provider's in-place update fails ("Last published context should not be set"), and a deleted agent keeps its ID for 30 days. Refer to the agent by its display name, **Pulsar Capital market risk**, never by ID.
 - **Editing a notebook means editing `notebooks/*.ipynb` and running `tofu apply`.** The commit step reruns when the file hash changes and replaces the notebook in BigQuery Studio, including any edits made in the console.
+- **The runtime template needs Secure Boot.** Orgs commonly enforce `constraints/compute.requireShieldedVm`, and a runtime from a template without it fails to start. The template has no fixed `name`, because a deleted template keeps its ID reserved.
 - **Notebook runtimes have no public IP and no internet access.** Google APIs work through Private Google Access. `pip install` from PyPI does not, so notebooks use only preinstalled packages.
 - **`run-pipeline.ipynb` sets `REGION` itself.** Keep it equal to `var.region`.
 - **Adding a stage in `definitions/` means adding it to `infra/datasets.tf`.**

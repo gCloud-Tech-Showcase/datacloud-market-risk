@@ -23,8 +23,9 @@ resource "google_compute_subnetwork" "notebooks" {
   private_ip_google_access = true
 }
 
+# No fixed name: the service generates the ID. A deleted template keeps its ID
+# reserved, so a fixed name makes every replacement fail with 409.
 resource "google_colab_runtime_template" "notebooks" {
-  name         = "market-risk-notebooks"
   display_name = "Market risk notebooks"
   description  = "Runtime for the demo notebooks: private network, no public IP."
   location     = var.region
@@ -37,6 +38,12 @@ resource "google_colab_runtime_template" "notebooks" {
     network                = google_compute_network.notebooks.id
     subnetwork             = google_compute_subnetwork.notebooks.id
     enable_internet_access = false
+  }
+
+  # Required where the org enforces constraints/compute.requireShieldedVm, a
+  # common default. Without it, the runtime fails to start.
+  shielded_vm_config {
+    enable_secure_boot = true
   }
 
   # Stop an idle runtime so a forgotten session does not keep running.
