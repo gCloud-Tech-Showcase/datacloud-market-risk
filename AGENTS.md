@@ -68,6 +68,7 @@ Correct, not just green: in `serving.var_by_desk`, desks with no stock in a scen
 - **Adding a stage in `definitions/` means adding it to `infra/datasets.tf`.**
 - **Non-interactive shells don't load `.envrc`**, so pass `--project` to `bq` and `gcloud`.
 - **Guide and quick reference show real output.** After changing SQL that feeds them, rerun the queries and update the samples.
+- **The README points at `infra/variables.tf` line 13** for the `project_id` edit. If you move that line, update the line number, the `diff` block and the `perl` one-liner, and rerun the one-liner on a copy.
 
 ## Teardown
 

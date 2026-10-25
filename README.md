@@ -44,7 +44,18 @@ gcloud auth login
 gcloud auth application-default login
 ```
 
-Set `project_id`'s default in `infra/variables.tf` to your project ID. That one value drives the providers, the resources, the bucket names and `setup.sh`.
+Set `project_id`'s default to your project ID. That one value drives the providers, the resources, the bucket names and `setup.sh`. In `infra/variables.tf`, line 13, in the `project_id` variable:
+
+```diff
+-  default     = "datacloud-market-risk"
++  default     = "<your-project-id>"
+```
+
+Or make the same edit from the terminal:
+
+```bash
+perl -pi -e "s/default     = \"datacloud-market-risk\"/default     = \"$PROJECT_ID\"/" infra/variables.tf
+```
 
 The Dataform repository pulls the SQL from this public GitHub repo over an anonymous link, so you need no GitHub token. To change the SQL, fork the repo and set `git_repo_url` in `infra/variables.tf` to your fork.
 
