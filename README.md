@@ -95,6 +95,8 @@ Follow [Value at Risk](docs/01-value-at-risk.md). You read the TimesFM forecast,
 
 To follow it as a notebook with charts instead, open **BigQuery Studio > Notebooks > 01 Value At Risk**. When it asks for a runtime, select **Runtime > Connect to a runtime > Create new runtime** and choose the **Market risk notebooks** template.
 
+Every query in the guide is also a saved query under **BigQuery Studio > Queries**, numbered like the guide (`01 Portfolio: positions by desk` to `99 Reset: remove the Tech scenario`), so you can open and run it without pasting.
+
 ## What gets created
 
 | Resource | Notes |
@@ -105,6 +107,7 @@ To follow it as a notebook with charts instead, open **BigQuery Studio > Noteboo
 | Procedure `serving.simulate_scenario` | Runs the Monte Carlo for one scenario |
 | Dataform repository | Linked anonymously to this repo, pulls from `main` |
 | Data agent **Pulsar Capital market risk** | Under **BigQuery > Agents** |
+| Saved queries `00 Check: ...` to `99 Reset: ...` | Under **BigQuery Studio > Queries**, one per `queries/*.sql` |
 | Notebooks `01 Value At Risk`, `Run Pipeline` | Under **BigQuery Studio > Notebooks**, from `notebooks/*.ipynb` |
 | Runtime template `Market risk notebooks` | Colab Enterprise runtime for the notebooks, on the `notebooks` network with no public IP |
 | Network `notebooks`, subnet `notebooks-<region>` | Private Google Access, so the runtime reaches Google APIs without a public IP |

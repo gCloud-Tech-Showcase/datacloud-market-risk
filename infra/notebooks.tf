@@ -3,7 +3,7 @@
 # Every .ipynb in notebooks/ becomes a notebook under BigQuery Studio >
 # Notebooks. A BigQuery Studio notebook is a Dataform repository with the label
 # single-file-asset-type=notebook, holding one file, content.ipynb. OpenTofu
-# creates the repository; commit_notebook.py writes the file, because no
+# creates the repository; commit_asset.py writes the file, because no
 # OpenTofu resource commits files into a Dataform repository.
 #
 # The commit reruns whenever the notebook file changes, so editing a notebook
@@ -46,6 +46,6 @@ resource "terraform_data" "notebook_content" {
   ]
 
   provisioner "local-exec" {
-    command = "python3 ${path.module}/scripts/commit_notebook.py ${google_dataform_repository.notebook[each.key].id} ${path.module}/../notebooks/${each.value}"
+    command = "python3 ${path.module}/scripts/commit_asset.py ${google_dataform_repository.notebook[each.key].id} ${path.module}/../notebooks/${each.value} content.ipynb"
   }
 }

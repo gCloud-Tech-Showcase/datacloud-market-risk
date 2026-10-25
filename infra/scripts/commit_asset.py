@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Commit one notebook file into its BigQuery Studio notebook repository.
+"""Commit one file into a BigQuery Studio asset repository.
 
-A BigQuery Studio notebook is a Dataform repository labelled
-single-file-asset-type=notebook that holds a single file, content.ipynb.
-OpenTofu creates the repository. No OpenTofu resource writes files into a
-Dataform repository, so `tofu apply` calls this script to commit the content.
+BigQuery Studio notebooks and saved queries are Dataform repositories
+labelled single-file-asset-type=notebook or =sql, each holding one file
+(content.ipynb or content.sql). OpenTofu creates the repository. No OpenTofu
+resource writes files into a Dataform repository, so `tofu apply` calls this
+script to commit the content.
 
-Usage: commit_notebook.py <repository resource name> <path to .ipynb>
+Usage: commit_asset.py <repository resource name> <path to source file> <target file name>
 """
 import base64
 import json
@@ -15,7 +16,7 @@ import sys
 import urllib.error
 import urllib.request
 
-repository, path = sys.argv[1], sys.argv[2]
+repository, path, target = sys.argv[1], sys.argv[2], sys.argv[3]
 
 token = subprocess.check_output(["gcloud", "auth", "print-access-token"], text=True).strip()
 with open(path, "rb") as f:
@@ -26,7 +27,7 @@ body = {
         "author": {"name": "OpenTofu", "emailAddress": "opentofu@example.com"},
         "commitMessage": f"Deploy {path.rsplit('/', 1)[-1]}",
     },
-    "fileOperations": {"content.ipynb": {"writeFile": {"contents": contents}}},
+    "fileOperations": {target: {"writeFile": {"contents": contents}}},
 }
 request = urllib.request.Request(
     f"https://dataform.googleapis.com/v1/{repository}:commit",

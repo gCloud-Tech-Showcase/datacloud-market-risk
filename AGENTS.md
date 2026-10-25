@@ -42,6 +42,7 @@ Deploying elsewhere: change `project_id`'s default in `infra/variables.tf`, and 
 | `assertions` | `market_data_integrity`, `timesfm_forecast_complete`, `var_sanity` | Hard-fail checks |
 | `assertions` | `risk_model_health` | Warning view |
 | BigQuery Studio | Notebooks `01 Value At Risk`, `Run Pipeline` | Dataform repositories labelled `single-file-asset-type=notebook`, one per `notebooks/*.ipynb` |
+| BigQuery Studio | Saved queries `00 Check` to `99 Reset` | Dataform repositories labelled `single-file-asset-type=sql`, one per `queries/*.sql` |
 
 ## Verifying
 
@@ -67,6 +68,7 @@ Correct, not just green: in `serving.var_by_desk`, desks with no stock in a scen
 - **Window functions run before `QUALIFY`.** Rank inside an already-filtered CTE (see `historical_pnl`).
 - **`raw.stress_scenarios` sector values must match `raw.sp500_companies.sector` exactly** (`Information Technology`, `Health Care`). `NULL` shocks every stock.
 - **Any edit to `infra/agent.tf` creates a new data agent with a new ID, then deletes the old one.** The provider's in-place update fails ("Last published context should not be set"), and a deleted agent keeps its ID for 30 days. Refer to the agent by its display name, **Pulsar Capital market risk**, never by ID.
+- **Each SQL block in `docs/01-value-at-risk.md` has a saved query.** `queries/<NN>-<name>.sql` holds the same SQL as the block in step NN (`00` for the start check, `99` for Reset). Its first line is `-- <display name>`, and the guide names it next to the block. Change the guide, the query file and the notebook in the same commit.
 - **Editing a notebook means editing `notebooks/*.ipynb` and running `tofu apply`.** The commit step reruns when the file hash changes and replaces the notebook in BigQuery Studio, including any edits made in the console.
 - **The runtime template needs Secure Boot.** Orgs commonly enforce `constraints/compute.requireShieldedVm`, and a runtime from a template without it fails to start. The template has no fixed `name`, because a deleted template keeps its ID reserved.
 - **Notebook runtimes have no public IP and no internet access.** Google APIs work through Private Google Access. `pip install` from PyPI does not, so notebooks use only preinstalled packages.

@@ -2,13 +2,29 @@
 
 You follow one risk number from market data to a plain-English answer: read the TimesFM forecast, trace a Monte Carlo path, compare forward-looking and historical VaR, add your own stress scenario, and ask the data agent about it.
 
-Run every query in **BigQuery Studio** in your project. To follow the same steps as a notebook with charts, open **BigQuery Studio > Notebooks > 01 Value At Risk** and connect it to a runtime from the **Market risk notebooks** template. The sample output comes from a run with an as-of date of 2026-10-23. Your numbers differ slightly, because TimesFM does not always return identical intervals for identical input.
+Run every query in **BigQuery Studio** in your project. Each query is also a saved query under **BigQuery Studio > Queries**, named next to its block, so you can open it instead of pasting. To follow the same steps as a notebook with charts, open **BigQuery Studio > Notebooks > 01 Value At Risk** and connect it to a runtime from the **Market risk notebooks** template. The sample output comes from a run with an as-of date of 2026-10-23. Your numbers differ slightly, because TimesFM does not always return identical intervals for identical input.
+
+---
+
+## Before you start
+
+Check the stress scenarios. A fresh deployment has two, `baseline` and `energy_down_15`. If `tech_down_10` is listed from an earlier run, run [Reset](#reset) first.
+
+Saved query: **00 Check: scenarios before you start**
+
+```sql
+SELECT scenario_id, description, sector, shock_pct
+FROM `raw.stress_scenarios`
+ORDER BY scenario_id;
+```
 
 ---
 
 ## Step 1: Look at the portfolio
 
 Pulsar Capital holds 30 US large-cap stocks across three desks:
+
+Saved query: **01 Portfolio: positions by desk**
 
 ```sql
 SELECT desk, book, COUNT(*) AS positions, SUM(notional_usd) AS notional_usd
@@ -36,6 +52,8 @@ The prices behind these positions are in `raw.sp500_daily_prices`, one row per s
 ## Step 2: Read the TimesFM forecast
 
 One `AI.FORECAST` query forecasts all 30 stocks, using four years of daily closes each. This is its raw output for JPMorgan:
+
+Saved query: **02a TimesFM: JPM forecast**
 
 ```sql
 SELECT symbol, DATE(forecast_timestamp) AS step_date, ROUND(forecast_value, 2) AS forecast_value,
@@ -65,6 +83,8 @@ ORDER BY forecast_timestamp;
 The interval widens with each step, as uncertainty should. The first step is dated Saturday 2026-10-24: TimesFM infers a daily step from the input and does not know about weekends, so read step 1 as the next trading day.
 
 The simulation needs a volatility, not a price. `serving.timesfm_forward_params` converts the 99% interval for step 1 into one, assuming log-normal prices: `ln(upper / lower) / (2 × 2.5758)`.
+
+Saved query: **02b TimesFM: forward vs historical volatility**
 
 ```sql
 SELECT symbol, ROUND(last_close, 2) AS last_close,
@@ -99,6 +119,8 @@ The median forecast is not used as a drift. Over one day its implied move is noi
 
 Path 42 replays 2025-08-12:
 
+Saved query: **03 Monte Carlo: path 42**
+
 ```sql
 SELECT scenario_id, path_id, historical_date, symbol, desk, notional_usd,
        ROUND(sim_log_return, 5) AS sim_log_return, ROUND(sim_pnl_usd, 2) AS sim_pnl_usd
@@ -122,6 +144,8 @@ Sum the 30 rows and you get the portfolio's P&L on that path, here about +$1.34M
 ---
 
 ## Step 4: Compare forward-looking and historical VaR
+
+Saved query: **04a VaR: forward-looking vs historical**
 
 ```sql
 SELECT scenario_id, method, ROUND(var_95_usd) AS var_95_usd, ROUND(var_99_usd) AS var_99_usd,
@@ -147,6 +171,8 @@ ORDER BY method;
 On 99 days out of 100, the Monte Carlo expects Pulsar Capital to lose less than about $2.3M in a day. On the worst 1% of days it expects to lose about $2.9M on average: that is the Expected Shortfall.
 
 Historical VaR is higher. To see why, list the days that drive it:
+
+Saved query: **04b VaR: worst historical days**
 
 ```sql
 SELECT date, ROUND(pnl_usd) AS pnl_usd, worst_day_rank
@@ -175,6 +201,8 @@ Two things separate the numbers. The historical view uses the last 500 trading d
 
 Ask a what-if: Information Technology falls 10% tomorrow. Add the scenario, then simulate it:
 
+Saved query: **05a Stress: add Tech falls 10% and simulate**
+
 ```sql
 INSERT INTO `raw.stress_scenarios` (scenario_id, description, sector, shock_pct)
 VALUES ('tech_down_10', 'Information Technology falls 10%', 'Information Technology', -0.10);
@@ -189,6 +217,8 @@ The procedure writes 3,000,000 rows to `serving.mc_simulated_pnl`. The whole scr
 *Console on 2026-10-25.*
 
 The views read that table, so they include the new scenario straight away:
+
+Saved query: **05b Stress: VaR by desk**
 
 ```sql
 SELECT desk,
@@ -240,6 +270,19 @@ Select **Show thinking** to see the SQL the agent ran. For questions that match 
 ![Show thinking expanded: the agent retrieved context for 8 tables and ran a query on serving.var_by_desk](images/data-agent-sql.png)
 
 *Console on 2026-10-25.*
+
+---
+
+## Reset
+
+Remove the scenario you added in Step 5, so the next run starts from the seeded `baseline` and `energy_down_15`.
+
+Saved query: **99 Reset: remove the Tech scenario**
+
+```sql
+DELETE FROM `serving.mc_simulated_pnl` WHERE scenario_id = 'tech_down_10';
+DELETE FROM `raw.stress_scenarios` WHERE scenario_id = 'tech_down_10';
+```
 
 ---
 
