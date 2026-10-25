@@ -7,7 +7,7 @@
 
 locals {
   agent_tables = {
-    serving = ["portfolio_var_summary", "var_by_desk", "var_contributions", "mc_simulated_pnl", "timesfm_forward_params"]
+    serving = ["portfolio_var_summary", "var_by_desk", "var_contributions", "mc_simulated_pnl", "timesfm_forward_params", "historical_pnl"]
     raw     = ["portfolio_positions", "stress_scenarios"]
   }
   serving = "`${var.project_id}.serving`"
@@ -36,8 +36,11 @@ resource "google_gemini_data_analytics_data_agent" "market_risk" {
 
         Unless the user names a scenario, use scenario_id = 'baseline' and method =
         'monte_carlo'. Monte Carlo VaR uses TimesFM forward volatility; historical
-        VaR replays the last 500 trading days. When they differ, explain that the
-        historical window can contain selloffs the forward view does not expect.
+        VaR replays the last 500 trading days. When they differ, look up the worst
+        days in historical_pnl and compare timesfm_vol_annualized with
+        historical_vol_annualized in timesfm_forward_params: a historical window that
+        contains a selloff the forward view does not expect gives a higher
+        historical VaR.
       EOT
 
       datasource_references {
@@ -85,6 +88,10 @@ resource "google_gemini_data_analytics_data_agent" "market_risk" {
       example_queries {
         natural_language_question = "Compare the TimesFM forward-looking VaR against traditional historical VaR."
         sql_query                 = "SELECT method, var_95_usd, var_99_usd, es_99_usd FROM ${local.serving}.portfolio_var_summary WHERE scenario_id = 'baseline' ORDER BY method"
+      }
+      example_queries {
+        natural_language_question = "Which days drive our historical VaR?"
+        sql_query                 = "SELECT date, pnl_usd, worst_day_rank FROM ${local.serving}.historical_pnl ORDER BY worst_day_rank LIMIT 10"
       }
       example_queries {
         natural_language_question = "Which 5 stocks contribute the most tail risk?"

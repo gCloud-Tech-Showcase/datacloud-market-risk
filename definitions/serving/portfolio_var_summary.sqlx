@@ -23,12 +23,8 @@ WITH mc_paths AS (
 ),
 
 historical_days AS (
-  SELECT 'baseline' AS scenario_id, r.date, SUM(p.notional_usd * (EXP(r.log_return) - 1)) AS pnl
-  FROM ${ref("daily_returns")} AS r
-  JOIN ${ref("portfolio_positions")} AS p USING (symbol)
-  WHERE r.log_return IS NOT NULL
-  GROUP BY r.date
-  QUALIFY ROW_NUMBER() OVER (ORDER BY r.date DESC) <= 500
+  SELECT 'baseline' AS scenario_id, pnl_usd AS pnl
+  FROM ${ref("historical_pnl")}
 ),
 
 outcomes AS (

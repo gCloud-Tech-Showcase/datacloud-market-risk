@@ -1,0 +1,21 @@
+config {
+  type: "view",
+  schema: "serving",
+  description: "SERVING: the portfolio's actual 1-day P&L over the last 500 trading days, at today's positions. The basis for historical VaR; sort by pnl_usd to see which days drive it.",
+  tags: ["market_risk", "serving", "marts"],
+  columns: {
+    date: "Trading date",
+    pnl_usd: "What today's positions would have made or lost that day, in US dollars. Negative is a loss.",
+    worst_day_rank: "1 for the day with the largest loss in the window"
+  }
+}
+
+SELECT
+  r.date,
+  SUM(p.notional_usd * (EXP(r.log_return) - 1)) AS pnl_usd,
+  RANK() OVER (ORDER BY SUM(p.notional_usd * (EXP(r.log_return) - 1))) AS worst_day_rank
+FROM ${ref("daily_returns")} AS r
+JOIN ${ref("portfolio_positions")} AS p USING (symbol)
+WHERE r.log_return IS NOT NULL
+GROUP BY r.date
+QUALIFY ROW_NUMBER() OVER (ORDER BY r.date DESC) <= 500
