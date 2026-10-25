@@ -3,6 +3,9 @@ config {
   schema: "serving",
   description: "SERVING: portfolio 1-day VaR and Expected Shortfall at 95% and 99%, per stress scenario from the Monte Carlo, plus historical VaR for comparison",
   tags: ["market_risk", "serving", "marts"],
+  bigquery: {
+    labels: catalog.insightsLabels("portfolio_var_summary")
+  },
   columns: {
     scenario_id: "Stress scenario. Historical rows use 'baseline'.",
     scenario_description: "What the scenario shocks",

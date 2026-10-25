@@ -5,7 +5,8 @@ config {
   tags: ["market_risk", "processed", "staging"],
   bigquery: {
     partitionBy: "date",
-    clusterBy: ["symbol"]
+    clusterBy: ["symbol"],
+    labels: catalog.insightsLabels("daily_returns")
   },
   columns: {
     symbol: "Stock ticker",

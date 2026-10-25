@@ -3,6 +3,9 @@ config {
   schema: "serving",
   description: "SERVING: one row per portfolio stock with the 1-day volatility implied by TimesFM, next to its trailing one-year volatility. TimesFM volatility drives the Monte Carlo.",
   tags: ["market_risk", "serving", "ml"],
+  bigquery: {
+    labels: catalog.insightsLabels("timesfm_forward_params")
+  },
   columns: {
     symbol: "Stock ticker",
     sector: "GICS sector",

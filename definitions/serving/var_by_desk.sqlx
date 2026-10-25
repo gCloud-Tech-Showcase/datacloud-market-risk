@@ -3,6 +3,9 @@ config {
   schema: "serving",
   description: "SERVING: standalone 1-day VaR and Expected Shortfall per desk and stress scenario, from the Monte Carlo",
   tags: ["market_risk", "serving", "marts"],
+  bigquery: {
+    labels: catalog.insightsLabels("var_by_desk")
+  },
   columns: {
     scenario_id: "Stress scenario",
     desk: "Trading desk",

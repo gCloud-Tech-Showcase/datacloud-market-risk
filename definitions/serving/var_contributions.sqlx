@@ -3,6 +3,9 @@ config {
   schema: "serving",
   description: "SERVING: each position's contribution to portfolio tail loss: its average P&L on the paths where the whole portfolio is in its worst 1%",
   tags: ["market_risk", "serving", "marts"],
+  bigquery: {
+    labels: catalog.insightsLabels("var_contributions")
+  },
   columns: {
     scenario_id: "Stress scenario",
     symbol: "Stock ticker",

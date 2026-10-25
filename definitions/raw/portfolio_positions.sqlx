@@ -3,6 +3,9 @@ config {
   schema: "raw",
   description: "RAW: Pulsar Capital's equity positions, about $100M across three desks. Synthetic.",
   tags: ["market_risk", "raw", "sources"],
+  bigquery: {
+    labels: catalog.insightsLabels("portfolio_positions")
+  },
   columns: {
     symbol: "Stock ticker",
     desk: "Trading desk that holds the position: Growth Equities, Value Equities or Defensive Equities",
