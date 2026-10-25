@@ -10,12 +10,14 @@ config {
   }
 }
 
-SELECT
-  r.date,
-  SUM(p.notional_usd * (EXP(r.log_return) - 1)) AS pnl_usd,
-  RANK() OVER (ORDER BY SUM(p.notional_usd * (EXP(r.log_return) - 1))) AS worst_day_rank
-FROM ${ref("daily_returns")} AS r
-JOIN ${ref("portfolio_positions")} AS p USING (symbol)
-WHERE r.log_return IS NOT NULL
-GROUP BY r.date
-QUALIFY ROW_NUMBER() OVER (ORDER BY r.date DESC) <= 500
+WITH daily AS (
+  SELECT r.date, SUM(p.notional_usd * (EXP(r.log_return) - 1)) AS pnl_usd
+  FROM ${ref("daily_returns")} AS r
+  JOIN ${ref("portfolio_positions")} AS p USING (symbol)
+  WHERE r.log_return IS NOT NULL
+  GROUP BY r.date
+  QUALIFY ROW_NUMBER() OVER (ORDER BY r.date DESC) <= 500
+)
+
+SELECT date, pnl_usd, RANK() OVER (ORDER BY pnl_usd) AS worst_day_rank
+FROM daily

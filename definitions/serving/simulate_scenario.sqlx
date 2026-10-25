@@ -19,7 +19,9 @@ config {
 -- All randomness comes from hashes of the path number (and stock), not RAND().
 -- Every scenario therefore replays the same draws in the same paths, so the
 -- difference between a stress run and the baseline is the shock alone, and
--- reruns give identical numbers.
+-- calling this again gives identical numbers. A full pipeline run can still
+-- shift VaR slightly, because AI.FORECAST does not always return identical
+-- intervals for identical input.
 CREATE OR REPLACE PROCEDURE ${self()}(p_scenario_id STRING)
 BEGIN
   DECLARE v_sector STRING;
