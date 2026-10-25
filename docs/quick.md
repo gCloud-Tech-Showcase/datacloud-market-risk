@@ -1,4 +1,4 @@
-# __DOMAIN_TITLE__ Quick Reference
+# Market Risk VaR on BigQuery Quick Reference
 
 <!-- SKELETON: replace with commands and queries that prove this domain works.
      Number each section. Show real sample output from a fresh-project run.
