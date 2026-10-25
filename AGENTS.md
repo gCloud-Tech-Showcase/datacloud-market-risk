@@ -41,6 +41,7 @@ Deploying elsewhere: change `project_id`'s default in `infra/variables.tf`, and 
 | `serving` | `portfolio_var_summary`, `var_by_desk`, `var_contributions`, `historical_pnl` | Risk views |
 | `assertions` | `market_data_integrity`, `timesfm_forecast_complete`, `var_sanity` | Hard-fail checks |
 | `assertions` | `risk_model_health` | Warning view |
+| BigQuery Studio | Notebooks `01 Value At Risk`, `Run Pipeline` | Dataform repositories labelled `single-file-asset-type=notebook`, one per `notebooks/*.ipynb` |
 
 ## Verifying
 
@@ -65,6 +66,9 @@ Correct, not just green: in `serving.var_by_desk`, desks with no stock in a scen
 - **`AI.FORECAST` dates steps on calendar days.** Step 1 after a Friday is a Saturday. Read it as the next trading day.
 - **Window functions run before `QUALIFY`.** Rank inside an already-filtered CTE (see `historical_pnl`).
 - **`raw.stress_scenarios` sector values must match `raw.sp500_companies.sector` exactly** (`Information Technology`, `Health Care`). `NULL` shocks every stock.
+- **Editing a notebook means editing `notebooks/*.ipynb` and running `tofu apply`.** The commit step reruns when the file hash changes and replaces the notebook in BigQuery Studio, including any edits made in the console.
+- **Notebook runtimes have no public IP and no internet access.** Google APIs work through Private Google Access. `pip install` from PyPI does not, so notebooks use only preinstalled packages.
+- **`run-pipeline.ipynb` sets `REGION` itself.** Keep it equal to `var.region`.
 - **Adding a stage in `definitions/` means adding it to `infra/datasets.tf`.**
 - **Non-interactive shells don't load `.envrc`**, so pass `--project` to `bq` and `gcloud`.
 - **Guide and quick reference show real output.** After changing SQL that feeds them, rerun the queries and update the samples.

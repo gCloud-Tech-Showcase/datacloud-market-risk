@@ -8,6 +8,7 @@ The portfolio belongs to **Pulsar Capital**, a fictional trading firm whose thre
 - **TimesFM in SQL:** one `AI.FORECAST` query forecasts every stock in the portfolio, and its prediction intervals set each stock's forward volatility
 - **Monte Carlo in SQL:** 100,000 paths of filtered historical simulation, with fat tails and real cross-stock correlation, giving VaR and Expected Shortfall per desk and per stress scenario
 - **Plain-English answers:** a Conversational Analytics data agent over the results, with verified queries that pin the risk definitions
+- **Notebooks in BigQuery Studio:** the whole walkthrough as a Python notebook with charts, deployed by `tofu apply`
 
 See [`docs/`](docs/README.md) for the step-by-step guide and [`docs/quick.md`](docs/quick.md) for copy-paste queries.
 
@@ -38,7 +39,7 @@ The data agent answering a stress question in plain English, after you add a Tec
 | A GCP project with billing | Create it once, before the first apply. The commands are below. |
 | [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) | Provides `gcloud` and `bq`. Tofu calls both during the apply. |
 | [OpenTofu](https://opentofu.org) 1.6 or later | `setup.sh` runs `tofu init`. |
-| `curl` | The apply downloads the market data with it. |
+| `curl` and `python3` | The apply downloads the market data with `curl` and deploys the notebooks with a small Python script. |
 
 The project ID must be globally unique. Create the project, then log in twice. Tofu uses the application default credentials. `bq` and `gcloud` use the CLI login.
 
@@ -72,7 +73,7 @@ The Dataform repository pulls the SQL from this public GitHub repo over an anony
 cd infra && tofu apply     # zero required variables
 ```
 
-The apply enables the APIs, creates the datasets and tables, downloads the market data from Kaggle, runs the Dataform pipeline once, and creates the data agent. The first pipeline run retries while IAM propagates.
+The apply enables the APIs, creates the datasets and tables, downloads the market data from Kaggle, runs the Dataform pipeline once, and creates the data agent and the notebooks. The first pipeline run retries while IAM propagates.
 
 ## Verify
 
@@ -92,6 +93,8 @@ A healthy run gives a baseline Monte Carlo 99% VaR of about 1% to 3% of notional
 
 Follow [Value at Risk](docs/01-value-at-risk.md). You read the TimesFM forecast, trace one Monte Carlo path, add your own stress scenario and simulate it, then ask the data agent about the results.
 
+To follow it as a notebook with charts instead, open **BigQuery Studio > Notebooks > 01 Value At Risk**. When it asks for a runtime, select **Runtime > Connect to a runtime > Create new runtime** and choose the **Market risk notebooks** template.
+
 ## What gets created
 
 | Resource | Notes |
@@ -102,6 +105,9 @@ Follow [Value at Risk](docs/01-value-at-risk.md). You read the TimesFM forecast,
 | Procedure `serving.simulate_scenario` | Runs the Monte Carlo for one scenario |
 | Dataform repository | Linked anonymously to this repo, pulls from `main` |
 | Data agent `pulsar_market_risk` | Under **BigQuery > Agents** |
+| Notebooks `01 Value At Risk`, `Run Pipeline` | Under **BigQuery Studio > Notebooks**, from `notebooks/*.ipynb` |
+| Runtime template `Market risk notebooks` | Colab Enterprise runtime for the notebooks, on the `notebooks` network with no public IP |
+| Network `notebooks`, subnet `notebooks-<region>` | Private Google Access, so the runtime reaches Google APIs without a public IP |
 | Bucket `<project>-landing` | The downloaded Kaggle files |
 | Service account `dataform-runner` | Pipeline runs execute as it |
 

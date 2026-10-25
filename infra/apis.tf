@@ -30,6 +30,7 @@ resource "google_project_service" "apis" {
     "geminidataanalytics.googleapis.com", # Conversational Analytics data agent
     "cloudaicompanion.googleapis.com",    # Gemini in BigQuery, which chat with the agent runs on
     "dataplex.googleapis.com",            # table metadata the agent reads as knowledge sources
+    "compute.googleapis.com",             # Colab Enterprise runtimes for the BigQuery Studio notebooks
 
 
   ])

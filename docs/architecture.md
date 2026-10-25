@@ -82,6 +82,8 @@ A pipeline run in Dataform, every action green:
 | `serving` | `portfolio_var_summary`, `var_by_desk`, `var_contributions`, `historical_pnl` | The risk views the guide and the agent read |
 | `assertions` | `market_data_integrity`, `timesfm_forecast_complete`, `var_sanity` | Hard-fail checks |
 | `assertions` | `risk_model_health` | Warning view: inputs outside their usual range |
+| BigQuery Studio | Notebooks `01 Value At Risk`, `Run Pipeline` | The walkthrough with charts, and a pipeline rerun. OpenTofu deploys each `notebooks/*.ipynb`. |
+| Colab Enterprise | Runtime template `Market risk notebooks` | Runs the notebooks on the private `notebooks` network |
 
 ## The simulation
 

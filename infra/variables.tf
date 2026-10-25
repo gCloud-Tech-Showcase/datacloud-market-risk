@@ -39,6 +39,11 @@ variable "kaggle_dataset" {
   description = "Kaggle dataset (owner/name) that infra/scripts/load_market_data.sh downloads. It must contain sp500_stocks.csv and sp500_companies.csv in the same columns."
   type        = string
   default     = "darkmatternet/s-and-p-500-stocks-25-years-of-data-updated-daily"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9_-]+/[A-Za-z0-9_-]+$", var.kaggle_dataset))
+    error_message = "kaggle_dataset must be <owner>/<dataset>, as in the dataset's Kaggle URL."
+  }
 }
 
 variable "run_pipeline_on_apply" {

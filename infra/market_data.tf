@@ -1,23 +1,9 @@
 # =============================================================================
 # MARKET DATA
-# The raw tables the Kaggle loader fills, the stress-scenario table you add rows
-# to, and the landing bucket. OpenTofu owns these tables rather than Dataform so
-# that a reload or an INSERT never needs a pipeline run.
+# The raw tables the Kaggle loader fills and the stress-scenario table you add
+# rows to. OpenTofu owns these tables rather than Dataform so that a reload or
+# an INSERT never needs a pipeline run.
 # =============================================================================
-
-resource "google_storage_bucket" "landing" {
-  name                        = "${var.project_id}-landing"
-  location                    = var.dataset_location
-  uniform_bucket_level_access = true
-  force_destroy               = true
-
-  labels = {
-    purpose = "data-domain"
-    domain  = "market-risk"
-  }
-
-  depends_on = [time_sleep.api_propagation]
-}
 
 resource "google_bigquery_table" "sp500_daily_prices" {
   dataset_id          = google_bigquery_dataset.stages["raw"].dataset_id

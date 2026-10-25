@@ -2,7 +2,7 @@
 
 You follow one risk number from market data to a plain-English answer: read the TimesFM forecast, trace a Monte Carlo path, compare forward-looking and historical VaR, add your own stress scenario, and ask the data agent about it.
 
-Run every query in **BigQuery Studio** in your project. The sample output comes from a run with an as-of date of 2026-10-23. Your numbers differ slightly, because TimesFM does not always return identical intervals for identical input.
+Run every query in **BigQuery Studio** in your project. To follow the same steps as a notebook with charts, open **BigQuery Studio > Notebooks > 01 Value At Risk** and connect it to a runtime from the **Market risk notebooks** template. The sample output comes from a run with an as-of date of 2026-10-23. Your numbers differ slightly, because TimesFM does not always return identical intervals for identical input.
 
 ---
 

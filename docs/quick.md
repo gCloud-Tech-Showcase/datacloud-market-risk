@@ -8,7 +8,7 @@ Copy-paste commands and queries, with sample output. Run the shell commands from
 
 ## 1. Rerun the pipeline
 
-The first `tofu apply` runs the pipeline once. To run it again, for example after changing the as-of date in your fork:
+The first `tofu apply` runs the pipeline once. To run it again, for example after changing the as-of date in your fork, open the **Run Pipeline** notebook in BigQuery Studio and run all cells, or run the script:
 
 ```bash
 cd infra
