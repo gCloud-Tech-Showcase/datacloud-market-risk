@@ -26,6 +26,12 @@ flowchart LR
     V --> A["Data agent<br/>pulsar_market_risk"]
 ```
 
+The same graph as Dataform compiles it:
+
+![Dataform compiled graph: declarations on the left, through returns and the TimesFM forecast, to simulate_scenario, mc_simulated_pnl and the risk views](images/dataform-graph.png)
+
+*Console on 2026-10-25.*
+
 ## Data Flow
 
 In what order things happen on `tofu apply`, and which calls are made:
@@ -53,6 +59,12 @@ sequenceDiagram
     DF->>BQ: Risk views, then assertions
     Tofu->>CA: Create data agent with verified queries
 ```
+
+A pipeline run in Dataform, every action green:
+
+![Dataform workflow execution: status Success, 15 actions from daily_returns to risk_model_health, with simulate_scenario and mc_simulated_pnl](images/dataform-run.png)
+
+*Console on 2026-10-25.*
 
 ## Key Components
 

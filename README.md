@@ -25,6 +25,12 @@ flowchart LR
 
 How the pieces are connected, step by step: [`docs/architecture.md`](docs/architecture.md).
 
+The data agent answering a stress question in plain English, after you add a Tech scenario:
+
+![The data agent's answer: 99% VaR by desk for baseline and tech_down_10, with only Growth Equities rising, from $1,034,867 to $3,961,646](docs/images/data-agent-answer.png)
+
+*Console on 2026-10-25.*
+
 ## Prerequisites
 
 | Requirement | Notes |

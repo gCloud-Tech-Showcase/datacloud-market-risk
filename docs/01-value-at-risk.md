@@ -58,6 +58,10 @@ ORDER BY forecast_timestamp;
 +--------+------------+----------------+----------+----------+--------------------+
 ```
 
+![BigQuery Studio: the JPM forecast query and its five rows, with the interval widening each step](images/timesfm-forecast-jpm.png)
+
+*Console on 2026-10-25.*
+
 The interval widens with each step, as uncertainty should. The first step is dated Saturday 2026-10-24: TimesFM infers a daily step from the input and does not know about weekends, so read step 1 as the next trading day.
 
 The simulation needs a volatility, not a price. `serving.timesfm_forward_params` converts the 99% interval for step 1 into one, assuming log-normal prices: `ln(upper / lower) / (2 × 2.5758)`.
@@ -136,6 +140,10 @@ ORDER BY method;
 +-------------+-------------+------------+------------+-----------+------------+
 ```
 
+![BigQuery Studio: baseline VaR and Expected Shortfall, historical against Monte Carlo](images/var-summary-baseline.png)
+
+*Console on 2026-10-25.*
+
 On 99 days out of 100, the Monte Carlo expects Pulsar Capital to lose less than about $1.8M in a day. On the worst 1% of days it expects to lose about $2.6M on average: that is the Expected Shortfall.
 
 Historical VaR is higher. To see why, list the days that drive it:
@@ -174,7 +182,13 @@ VALUES ('tech_down_10', 'Information Technology falls 10%', 'Information Technol
 CALL `serving.simulate_scenario`('tech_down_10');
 ```
 
-The procedure writes 3,000,000 rows to `serving.mc_simulated_pnl`, which took about 10 seconds in the sample run. The views read that table, so they include the new scenario straight away:
+The procedure writes 3,000,000 rows to `serving.mc_simulated_pnl`. The whole script, insert included, took 10 to 20 seconds in test runs. The **Job information** tab shows each statement the procedure ran:
+
+![BigQuery Studio: the script's job summary, 4 statements processed with status SUCCESS, including the procedure's DELETE and INSERT into mc_simulated_pnl](images/stress-scenario-call-job.png)
+
+*Console on 2026-10-25.*
+
+The views read that table, so they include the new scenario straight away:
 
 ```sql
 SELECT desk,
@@ -195,6 +209,10 @@ ORDER BY desk;
 +--------------------+-----------------+---------------------+
 ```
 
+![BigQuery Studio: 99% VaR by desk, baseline against tech_down_10](images/stress-by-desk.png)
+
+*Console on 2026-10-25.*
+
 Only Growth Equities moves, because it holds all the Tech stocks. The other desks are unchanged to the dollar: every scenario replays the same draws on the same paths, so the shock is the only difference.
 
 ---
@@ -209,7 +227,17 @@ In the Google Cloud console, open **BigQuery > Agents**, select **Pulsar Capital
 - *Which days drive our historical VaR?*
 - *Show the distribution of simulated portfolio P&L across the Monte Carlo paths for the baseline.*
 
-Open the SQL the agent wrote for each answer. For the first question it should match the query in Step 4, because the agent has it as a verified query. The third question names your new scenario; the agent finds it in the data without any change to its setup.
+The third question names your new scenario; the agent finds it in the data without any change to its setup:
+
+![The data agent's answer to the tech_down_10 question, with a table of baseline and stressed VaR by desk and a short insight](images/data-agent-answer.png)
+
+*Console on 2026-10-25.*
+
+Select **Show thinking** to see the SQL the agent ran. For questions that match a verified query, such as the first one, the SQL follows it:
+
+![Show thinking expanded: the agent retrieved context for 8 tables and ran a query on serving.var_by_desk](images/data-agent-sql.png)
+
+*Console on 2026-10-25.*
 
 ---
 
