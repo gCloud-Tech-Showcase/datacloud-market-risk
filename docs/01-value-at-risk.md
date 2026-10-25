@@ -87,7 +87,7 @@ ORDER BY symbol;
 +--------+------------+--------+---------+-----------------+--------------------+
 ```
 
-TimesFM's forward volatility is below the trailing year for every stock here, and for 21 of the 30 in the portfolio. The trailing year includes the April 2025 selloff. TimesFM, reading the recent path, expects calmer days.
+TimesFM's forward volatility is below the trailing year for every stock here, and for 21 of the 30 in the portfolio: its next-day band is narrower than the last year of daily moves would suggest. The demo uses the band as a volatility input. It does not claim the forward view is more accurate.
 
 The median forecast is not used as a drift. Over one day its implied move is noise, so the simulation assumes zero drift.
 
@@ -95,7 +95,7 @@ The median forecast is not used as a drift. Over one day its implied move is noi
 
 ## Step 3: Trace one Monte Carlo path
 
-`serving.mc_simulated_pnl` holds 100,000 paths × 30 positions per scenario. Each path replays one of the last 1,000 trading days for all 30 stocks together, so the stocks move the way they actually moved together that day. Each stock's move is first divided by its volatility at the time, then multiplied by its TimesFM volatility today. A small amount of extra noise per stock makes every path distinct.
+`serving.mc_simulated_pnl` holds 100,000 paths × 30 positions per scenario. Each path replays one of the last 1,000 trading days for all 30 stocks together, so the stocks move the way they actually moved together that day. Each stock's move is first divided by its volatility at the time, then multiplied by its TimesFM volatility today. A small amount of extra noise per stock makes every path distinct. The 100,000 paths are a smoothed bootstrap of those 1,000 real days, about 100 paths per day: the path count makes the distribution smooth, not better informed.
 
 Path 42 replays 2025-08-12:
 
@@ -214,6 +214,8 @@ ORDER BY desk;
 *Console on 2026-10-25.*
 
 Only Growth Equities moves, because it holds all the Tech stocks. The other desks are unchanged to the dollar: every scenario replays the same draws on the same paths, so the shock is the only difference.
+
+A shock is applied on top of every path, so the result is VaR given the shock: the baseline risk plus the shock's loss. It is not Basel stressed VaR, which recalibrates the model to a stressed historical period.
 
 ---
 

@@ -93,7 +93,7 @@ A pipeline run in Dataform, every action green:
 2. For every stock, the path takes that day's standardized return: the actual return divided by the stock's trailing 63-day volatility at the time. Because all 30 stocks come from the same day, they keep that day's co-movement and its fat tails.
 3. A small amount of independent Gaussian noise (weight 0.25, rescaled to keep unit variance) is added per stock. Without it, 100,000 paths would yield only 1,000 distinct portfolio outcomes. It lowers cross-stock correlation by about 6%.
 4. The result is multiplied by the stock's TimesFM 1-day volatility. Drift is zero.
-5. A scenario's shock is added as `ln(1 + shock_pct)` to every stock in its sector, or to every stock when the sector is `NULL`.
+5. A scenario's shock is added as `ln(1 + shock_pct)` to every stock in its sector, or to every stock when the sector is `NULL`. The result is VaR given the shock, not Basel stressed VaR, which recalibrates to a stressed period.
 
 The noise also comes from hashes, not `RAND()`. Every scenario replays the same draws on the same paths, so a stress result differs from the baseline by the shock alone.
 

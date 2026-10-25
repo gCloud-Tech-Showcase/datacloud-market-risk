@@ -8,7 +8,7 @@ A market risk workflow for Pulsar Capital, a fictional firm with three equity de
 
 1. **Market data:** 25 years of daily S&P 500 prices from Kaggle, turned into log returns up to a pinned as-of date.
 2. **Forward volatility:** TimesFM forecasts every stock in one `AI.FORECAST` query, and its 99% prediction interval sets each stock's volatility.
-3. **Monte Carlo:** 100,000 paths per stress scenario, replaying real trading days at today's volatility, giving VaR and Expected Shortfall per portfolio, desk and stock.
+3. **Monte Carlo:** 100,000 paths per stress scenario, a smoothed bootstrap of 1,000 real trading days at today's volatility, giving VaR and Expected Shortfall per portfolio, desk and stock.
 4. **Answers:** a Conversational Analytics data agent that answers risk questions in plain English and shows the SQL it ran.
 
 ## Technologies

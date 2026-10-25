@@ -68,7 +68,7 @@ resource "google_gemini_data_analytics_data_agent" "market_risk" {
       }
       glossary_terms {
         display_name = "stress scenario"
-        description  = "A price shock applied to one sector, or to every stock, on top of every simulated path. Listed in raw.stress_scenarios; 'baseline' has no shock."
+        description  = "A price shock applied to one sector, or to every stock, on top of every simulated path. Listed in raw.stress_scenarios; 'baseline' has no shock. The result is VaR given the shock, not Basel stressed VaR."
         labels       = ["stress test", "what-if", "shock"]
       }
       glossary_terms {

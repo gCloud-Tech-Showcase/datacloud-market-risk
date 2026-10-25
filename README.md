@@ -6,7 +6,7 @@ The portfolio belongs to **Pulsar Capital**, a fictional trading firm whose thre
 
 - **Real market data:** daily prices for the S&P 500 members from 2000 on, loaded from a public [Kaggle dataset](https://www.kaggle.com/datasets/darkmatternet/s-and-p-500-stocks-25-years-of-data-updated-daily) (CC0) and pinned to an as-of date
 - **TimesFM in SQL:** one `AI.FORECAST` query forecasts every stock in the portfolio, and its prediction intervals set each stock's forward volatility
-- **Monte Carlo in SQL:** 100,000 paths of filtered historical simulation, with fat tails and real cross-stock correlation, giving VaR and Expected Shortfall per desk and per stress scenario
+- **Monte Carlo in SQL:** 100,000 paths of filtered historical simulation, a smoothed bootstrap of 1,000 real trading days with fat tails and real cross-stock correlation, giving VaR and Expected Shortfall per desk and per stress scenario
 - **Plain-English answers:** a Conversational Analytics data agent over the results, with verified queries that pin the risk definitions
 - **Notebooks in BigQuery Studio:** the whole walkthrough as a Python notebook with charts, deployed by `tofu apply`
 
