@@ -25,7 +25,7 @@ A market risk workflow for Pulsar Capital, a fictional firm with three equity de
 
 From the sample run, as of 2026-10-23:
 
-- **1.81% of notional** 1-day 99% VaR from the Monte Carlo, against 2.79% historical. The historical window holds the April 2025 selloff.
+- **2.31% of notional** 1-day 99% VaR from the Monte Carlo, against 2.73% historical. The historical window holds the April 2025 selloff.
 - **3,000,000 rows simulated** for a new stress scenario in 10 to 20 seconds, with one `INSERT` and one `CALL`
 - **5 of 5 risk questions** answered by the data agent with SQL that matches the verified queries
 

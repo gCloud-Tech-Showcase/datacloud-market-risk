@@ -43,9 +43,9 @@ ORDER BY method, scenario_id;
 +----------------+-------------+------------+------------+-----------+------------+
 |  scenario_id   |   method    | var_95_usd | var_99_usd | es_99_usd | var_99_pct |
 +----------------+-------------+------------+------------+-----------+------------+
-| baseline       | historical  |  1407881.0 |  2792426.0 | 4435897.0 |       2.79 |
-| baseline       | monte_carlo |  1171371.0 |  1810869.0 | 2608236.0 |       1.81 |
-| energy_down_15 | monte_carlo |  3102284.0 |  3706239.0 | 4497174.0 |       3.71 |
+| baseline       | historical  |  1465224.0 |  2732315.0 | 4424646.0 |       2.73 |
+| baseline       | monte_carlo |  1371047.0 |  2306919.0 | 2934727.0 |       2.31 |
+| energy_down_15 | monte_carlo |  3302857.0 |  4259953.0 | 4828675.0 |       4.26 |
 +----------------+-------------+------------+------------+-----------+------------+
 ```
 
@@ -65,12 +65,12 @@ ORDER BY desk, scenario_id;
 +----------------+--------------------+------------+-----------+
 |  scenario_id   |        desk        | var_99_usd | es_99_usd |
 +----------------+--------------------+------------+-----------+
-| baseline       | Defensive Equities |   613140.0 |  744931.0 |
-| energy_down_15 | Defensive Equities |   613140.0 |  744931.0 |
-| baseline       | Growth Equities    |  1034867.0 | 1284023.0 |
-| energy_down_15 | Growth Equities    |  1034867.0 | 1284023.0 |
-| baseline       | Value Equities     |   964040.0 | 1299671.0 |
-| energy_down_15 | Value Equities     |  2856091.0 | 3178204.0 |
+| baseline       | Defensive Equities |   657967.0 |  783773.0 |
+| energy_down_15 | Defensive Equities |   657967.0 |  783773.0 |
+| baseline       | Growth Equities    |  1449903.0 | 1846942.0 |
+| energy_down_15 | Growth Equities    |  1449903.0 | 1846942.0 |
+| baseline       | Value Equities     |   989517.0 | 1333329.0 |
+| energy_down_15 | Value Equities     |  2880757.0 | 3210009.0 |
 +----------------+--------------------+------------+-----------+
 ```
 
@@ -91,15 +91,17 @@ LIMIT 5;
 
 ```text
 +--------+------------------------+-----------------+------------------------+-----------+
-| symbol |         sector         |      desk       | es_99_contribution_usd | share_pct |
-+--------+------------------------+-----------------+------------------------+-----------+
-| AMZN   | Consumer Discretionary | Growth Equities |               242869.0 |       9.3 |
-| JPM    | Financials             | Value Equities  |               200830.0 |       7.7 |
-| MS     | Financials             | Value Equities  |               154516.0 |       5.9 |
-| NVDA   | Information Technology | Growth Equities |               148192.0 |       5.7 |
-| AAPL   | Information Technology | Growth Equities |               147032.0 |       5.6 |
-+--------+------------------------+-----------------+------------------------+-----------+
+| symbol |         sector         |        desk        | es_99_contribution_usd | share_pct |
++--------+------------------------+--------------------+------------------------+-----------+
+| LULU   | Consumer Discretionary | Growth Equities    |               637785.0 |      21.7 |
+| GOOGL  | Communication Services | Growth Equities    |               249679.0 |       8.5 |
+| AAPL   | Information Technology | Growth Equities    |               157295.0 |       5.4 |
+| JPM    | Financials             | Value Equities     |               150424.0 |       5.1 |
+| LLY    | Health Care            | Defensive Equities |               141014.0 |       4.8 |
++--------+------------------------+--------------------+------------------------+-----------+
 ```
+
+LULU is a $6M position in one of the more volatile stocks in the book, so it carries about a fifth of the tail on its own. That concentration is what this view is for.
 
 ---
 
@@ -142,13 +144,7 @@ Rows here are a prompt to look, not a failure:
 SELECT * FROM `assertions.risk_model_health`;
 ```
 
-```text
-+------------------------------+--------+--------------------+----------------+
-|          check_name          | symbol |       value        | expected_range |
-+------------------------------+--------+--------------------+----------------+
-| TimesFM vol / historical vol | MSFT   | 0.3619745774101493 | 0.5 to 1.5     |
-+------------------------------+--------+--------------------+----------------+
-```
+The view returned no rows in the sample run. A row names the check, the stock, the observed value and the expected range, for example a stock whose TimesFM volatility is less than half its trailing volatility.
 
 ---
 

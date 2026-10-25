@@ -72,7 +72,7 @@ SELECT symbol, ROUND(last_close, 2) AS last_close,
        ROUND(100 * timesfm_vol_annualized, 1) AS timesfm_vol_pct,
        ROUND(100 * historical_vol_annualized, 1) AS historical_vol_pct
 FROM `serving.timesfm_forward_params`
-WHERE symbol IN ('JPM', 'NVDA', 'XOM', 'MSFT')
+WHERE symbol IN ('JPM', 'NVDA', 'XOM', 'GOOGL')
 ORDER BY symbol;
 ```
 
@@ -80,14 +80,14 @@ ORDER BY symbol;
 +--------+------------+--------+---------+-----------------+--------------------+
 | symbol | last_close | low_99 | high_99 | timesfm_vol_pct | historical_vol_pct |
 +--------+------------+--------+---------+-----------------+--------------------+
+| GOOGL  |     320.21 |  305.3 |   333.7 |            27.4 |               31.5 |
 | JPM    |     331.58 | 321.45 |   341.5 |            18.6 |               22.2 |
-| MSFT   |     524.51 | 515.61 |  535.75 |            11.8 |               32.6 |
 | NVDA   |     210.96 |  202.1 |  221.08 |            27.7 |               37.6 |
-| XOM    |     183.21 | 177.81 |  189.92 |            20.3 |               26.2 |
+| XOM    |     183.21 | 177.38 |  190.05 |            21.2 |               26.2 |
 +--------+------------+--------+---------+-----------------+--------------------+
 ```
 
-TimesFM's forward volatility is below the trailing year for every stock here. The trailing year includes the April 2025 selloff; TimesFM, reading the recent path, expects calmer days. MSFT is far enough below that `assertions.risk_model_health` flags it for a look, without failing the run.
+TimesFM's forward volatility is below the trailing year for every stock here, and for 21 of the 30 in the portfolio. The trailing year includes the April 2025 selloff. TimesFM, reading the recent path, expects calmer days.
 
 The median forecast is not used as a drift. Over one day its implied move is noise, so the simulation assumes zero drift.
 
@@ -117,7 +117,7 @@ ORDER BY symbol;
 +-------------+---------+-----------------+--------+-----------------+--------------+----------------+-------------+
 ```
 
-Sum the 30 rows and you get the portfolio's P&L on that path, here about +$1.06M. VaR is a percentile of that sum across all 100,000 paths.
+Sum the 30 rows and you get the portfolio's P&L on that path, here about +$1.34M. VaR is a percentile of that sum across all 100,000 paths.
 
 ---
 
@@ -135,8 +135,8 @@ ORDER BY method;
 +-------------+-------------+------------+------------+-----------+------------+
 | scenario_id |   method    | var_95_usd | var_99_usd | es_99_usd | var_99_pct |
 +-------------+-------------+------------+------------+-----------+------------+
-| baseline    | historical  |  1407881.0 |  2792426.0 | 4435897.0 |       2.79 |
-| baseline    | monte_carlo |  1171371.0 |  1810869.0 | 2608236.0 |       1.81 |
+| baseline    | historical  |  1465224.0 |  2732315.0 | 4424646.0 |       2.73 |
+| baseline    | monte_carlo |  1371047.0 |  2306919.0 | 2934727.0 |       2.31 |
 +-------------+-------------+------------+------------+-----------+------------+
 ```
 
@@ -144,7 +144,7 @@ ORDER BY method;
 
 *Console on 2026-10-25.*
 
-On 99 days out of 100, the Monte Carlo expects Pulsar Capital to lose less than about $1.8M in a day. On the worst 1% of days it expects to lose about $2.6M on average: that is the Expected Shortfall.
+On 99 days out of 100, the Monte Carlo expects Pulsar Capital to lose less than about $2.3M in a day. On the worst 1% of days it expects to lose about $2.9M on average: that is the Expected Shortfall.
 
 Historical VaR is higher. To see why, list the days that drive it:
 
@@ -159,11 +159,11 @@ LIMIT 5;
 +------------+------------+----------------+
 |    date    |  pnl_usd   | worst_day_rank |
 +------------+------------+----------------+
-| 2025-04-04 | -6227844.0 |              1 |
-| 2025-04-03 | -5759390.0 |              2 |
-| 2025-04-10 | -4292110.0 |              3 |
-| 2025-03-10 | -3065783.0 |              4 |
-| 2025-10-10 | -2834358.0 |              5 |
+| 2025-04-03 | -5912010.0 |              1 |
+| 2025-04-04 | -5778544.0 |              2 |
+| 2025-04-10 | -4455143.0 |              3 |
+| 2025-03-10 | -3188433.0 |              4 |
+| 2024-12-18 | -2789102.0 |              5 |
 +------------+------------+----------------+
 ```
 
@@ -203,9 +203,9 @@ ORDER BY desk;
 +--------------------+-----------------+---------------------+
 |        desk        | baseline_var_99 | tech_down_10_var_99 |
 +--------------------+-----------------+---------------------+
-| Defensive Equities |        613140.0 |            613140.0 |
-| Growth Equities    |       1034867.0 |           3961646.0 |
-| Value Equities     |        964040.0 |            964040.0 |
+| Defensive Equities |        657967.0 |            657967.0 |
+| Growth Equities    |       1449903.0 |           3708373.0 |
+| Value Equities     |        989517.0 |            989517.0 |
 +--------------------+-----------------+---------------------+
 ```
 
