@@ -9,6 +9,7 @@ The portfolio belongs to **Pulsar Capital**, a fictional trading firm whose thre
 - **Monte Carlo in SQL:** 100,000 paths of filtered historical simulation, a smoothed bootstrap of 1,000 real trading days with fat tails and real cross-stock correlation, giving VaR and Expected Shortfall per desk and per stress scenario
 - **Plain-English answers:** a Conversational Analytics data agent over the results, with verified queries that pin the risk definitions
 - **Notebooks in BigQuery Studio:** the whole walkthrough as a Python notebook with charts, deployed by `tofu apply`
+- **Governed risk data:** three Knowledge Catalog data products with owners, a business glossary linked to columns, lineage, and published profile, quality and insights scans
 
 See [`docs/`](docs/README.md) for the step-by-step guide and [`docs/quick.md`](docs/quick.md) for copy-paste queries.
 
@@ -73,7 +74,7 @@ The Dataform repository pulls the SQL from this public GitHub repo over an anony
 cd infra && tofu apply     # zero required variables
 ```
 
-The apply enables the APIs, creates the datasets and tables, downloads the market data from Kaggle, runs the Dataform pipeline once, and creates the data agent and the notebooks. The first pipeline run retries while IAM propagates.
+The apply enables the APIs, creates the datasets and tables, downloads the market data from Kaggle, runs the Dataform pipeline once, and creates the data agent, the notebooks and the Knowledge Catalog data products. The first pipeline run retries while IAM propagates. The scans run at the end, so the apply waits about 6 minutes for IAM and profile results.
 
 ## Verify
 
@@ -89,6 +90,12 @@ SELECT * FROM `assertions.var_sanity`;                 -- must be empty
 
 A healthy run gives a baseline Monte Carlo 99% VaR of about 1% to 3% of notional, with Expected Shortfall above it. A failing assertion fails the pipeline run.
 
+Then check the catalog: every scan ran, every quality rule passed, and lineage reaches the raw tables.
+
+```bash
+python3 scripts/verify_catalog.py --wait=10
+```
+
 ## Try it
 
 Follow [Value at Risk](docs/01-value-at-risk.md). You read the TimesFM forecast, trace one Monte Carlo path, add your own stress scenario and simulate it, then ask the data agent about the results.
@@ -96,6 +103,8 @@ Follow [Value at Risk](docs/01-value-at-risk.md). You read the TimesFM forecast,
 To follow it as a notebook with charts instead, open **BigQuery Studio > Notebooks > 01 Value At Risk**. When it asks for a runtime, select **Runtime > Connect to a runtime > Create new runtime** and choose the **Market risk notebooks** template.
 
 Every query in the guide is also a saved query under **BigQuery Studio > Queries**, numbered like the guide (`01 Portfolio: positions by desk` to `99 Reset: remove the Tech scenario`), so you can open and run it without pasting.
+
+Then follow [Governed Risk Data](docs/02-governed-risk-data.md). You find the risk data product, trace a VaR figure back to raw prices, read the quality results on its inputs, and look up what a column means. The checks are inspired by risk data aggregation principles such as BCBS 239. The repo is a learning example, not a compliance implementation.
 
 ## What gets created
 
@@ -113,6 +122,11 @@ Every query in the guide is also a saved query under **BigQuery Studio > Queries
 | Network `notebooks`, subnet `notebooks-<region>` | Private Google Access, so the runtime reaches Google APIs without a public IP |
 | Bucket `<project>-landing` | The downloaded Kaggle files |
 | Service account `dataform-runner` | Pipeline runs execute as it |
+| Data products `Market Data`, `Trading Positions`, `Market Risk Metrics` | In Knowledge Catalog. 8 assets in total. |
+| Glossary `Market risk` | 10 terms in 3 categories, linked to the columns they define |
+| Aspect types `risk-metric-definition`, `model-description` | On the VaR views and `serving.timesfm_forward_params` |
+| Profile, quality and insights scans | One of each per data product asset, run once at apply |
+| Service account `data-scanner` | The scans run as it |
 
 ## Known limitations
 

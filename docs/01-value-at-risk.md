@@ -68,11 +68,11 @@ ORDER BY forecast_timestamp;
 +--------+------------+----------------+----------+----------+--------------------+
 | symbol | step_date  | forecast_value | lower_99 | upper_99 | ai_forecast_status |
 +--------+------------+----------------+----------+----------+--------------------+
-| JPM    | 2026-10-24 |         331.56 |   321.45 |    341.5 |                    |
-| JPM    | 2026-10-25 |         331.11 |   319.37 |   343.27 |                    |
-| JPM    | 2026-10-26 |         331.25 |   318.41 |   347.94 |                    |
-| JPM    | 2026-10-27 |         332.89 |   314.65 |   348.12 |                    |
-| JPM    | 2026-10-28 |         332.78 |   315.67 |   354.27 |                    |
+| JPM    | 2026-10-24 |         330.87 |    322.3 |   340.36 |                    |
+| JPM    | 2026-10-25 |         331.36 |   321.28 |   342.79 |                    |
+| JPM    | 2026-10-26 |         331.42 |   319.58 |   347.28 |                    |
+| JPM    | 2026-10-27 |         332.58 |   315.62 |   347.06 |                    |
+| JPM    | 2026-10-28 |         333.15 |   317.11 |   354.03 |                    |
 +--------+------------+----------------+----------+----------+--------------------+
 ```
 
@@ -100,14 +100,14 @@ ORDER BY symbol;
 +--------+------------+--------+---------+-----------------+--------------------+
 | symbol | last_close | low_99 | high_99 | timesfm_vol_pct | historical_vol_pct |
 +--------+------------+--------+---------+-----------------+--------------------+
-| GOOGL  |     320.21 |  305.3 |   333.7 |            27.4 |               31.5 |
-| JPM    |     331.58 | 321.45 |   341.5 |            18.6 |               22.2 |
-| NVDA   |     210.96 |  202.1 |  221.08 |            27.7 |               37.6 |
-| XOM    |     183.21 | 177.38 |  190.05 |            21.2 |               26.2 |
+| GOOGL  |     320.21 | 304.32 |  337.41 |            31.8 |               31.5 |
+| JPM    |     331.58 |  322.3 |  340.36 |            16.8 |               22.2 |
+| NVDA   |     210.96 | 201.37 |  222.11 |            30.2 |               37.6 |
+| XOM    |     183.21 | 177.04 |  189.36 |            20.7 |               26.2 |
 +--------+------------+--------+---------+-----------------+--------------------+
 ```
 
-TimesFM's forward volatility is below the trailing year for every stock here, and for 21 of the 30 in the portfolio: its next-day band is narrower than the last year of daily moves would suggest. The demo uses the band as a volatility input. It does not claim the forward view is more accurate.
+TimesFM's forward volatility is below the trailing year for JPM, NVDA and XOM, and for 20 of the 30 in the portfolio: its next-day band is narrower than the last year of daily moves would suggest. GOOGL is the exception here, close to its trailing year. The demo uses the band as a volatility input. It does not claim the forward view is more accurate.
 
 The median forecast is not used as a drift. Over one day its implied move is noise, so the simulation assumes zero drift.
 
@@ -133,13 +133,13 @@ ORDER BY symbol;
 +-------------+---------+-----------------+--------+-----------------+--------------+----------------+-------------+
 | scenario_id | path_id | historical_date | symbol |      desk       | notional_usd | sim_log_return | sim_pnl_usd |
 +-------------+---------+-----------------+--------+-----------------+--------------+----------------+-------------+
-| baseline    |      42 |      2025-08-12 | AAPL   | Growth Equities |    7000000.0 |        0.00574 |    40285.39 |
-| baseline    |      42 |      2025-08-12 | JPM    | Value Equities  |    6000000.0 |        0.01282 |    77444.54 |
-| baseline    |      42 |      2025-08-12 | XOM    | Value Equities  |    5000000.0 |        0.01039 |    52241.61 |
+| baseline    |      42 |      2025-08-12 | AAPL   | Growth Equities |    7000000.0 |        0.00547 |    38368.11 |
+| baseline    |      42 |      2025-08-12 | JPM    | Value Equities  |    6000000.0 |        0.01156 |    69735.49 |
+| baseline    |      42 |      2025-08-12 | XOM    | Value Equities  |    5000000.0 |        0.01062 |    53367.22 |
 +-------------+---------+-----------------+--------+-----------------+--------------+----------------+-------------+
 ```
 
-Sum the 30 rows and you get the portfolio's P&L on that path, here about +$1.34M. VaR is a percentile of that sum across all 100,000 paths.
+Sum the 30 rows and you get the portfolio's P&L on that path, here about +$1.35M. VaR is a percentile of that sum across all 100,000 paths.
 
 ---
 
@@ -159,8 +159,8 @@ ORDER BY method;
 +-------------+-------------+------------+------------+-----------+------------+
 | scenario_id |   method    | var_95_usd | var_99_usd | es_99_usd | var_99_pct |
 +-------------+-------------+------------+------------+-----------+------------+
-| baseline    | historical  |  1465224.0 |  2732315.0 | 4424646.0 |       2.73 |
-| baseline    | monte_carlo |  1371047.0 |  2306919.0 | 2934727.0 |       2.31 |
+| baseline    | historical  |  1465224.0 |  2732315.0 | 4424647.0 |       2.73 |
+| baseline    | monte_carlo |  1391622.0 |  2330279.0 | 2977558.0 |       2.33 |
 +-------------+-------------+------------+------------+-----------+------------+
 ```
 
@@ -168,7 +168,7 @@ ORDER BY method;
 
 *Console on 2026-10-25.*
 
-On 99 days out of 100, the Monte Carlo expects Pulsar Capital to lose less than about $2.3M in a day. On the worst 1% of days it expects to lose about $2.9M on average: that is the Expected Shortfall.
+On 99 days out of 100, the Monte Carlo expects Pulsar Capital to lose less than about $2.3M in a day. On the worst 1% of days it expects to lose about $3.0M on average: that is the Expected Shortfall.
 
 Historical VaR is higher. To see why, list the days that drive it:
 
@@ -185,11 +185,11 @@ LIMIT 5;
 +------------+------------+----------------+
 |    date    |  pnl_usd   | worst_day_rank |
 +------------+------------+----------------+
-| 2025-04-03 | -5912010.0 |              1 |
+| 2025-04-03 | -5912009.0 |              1 |
 | 2025-04-04 | -5778544.0 |              2 |
-| 2025-04-10 | -4455143.0 |              3 |
-| 2025-03-10 | -3188433.0 |              4 |
-| 2024-12-18 | -2789102.0 |              5 |
+| 2025-04-10 | -4455146.0 |              3 |
+| 2025-03-10 | -3188432.0 |              4 |
+| 2024-12-18 | -2789105.0 |              5 |
 +------------+------------+----------------+
 ```
 
@@ -233,9 +233,9 @@ ORDER BY desk;
 +--------------------+-----------------+---------------------+
 |        desk        | baseline_var_99 | tech_down_10_var_99 |
 +--------------------+-----------------+---------------------+
-| Defensive Equities |        657967.0 |            657967.0 |
-| Growth Equities    |       1449903.0 |           3708373.0 |
-| Value Equities     |        989517.0 |            989517.0 |
+| Defensive Equities |        653567.0 |            653567.0 |
+| Growth Equities    |       1512825.0 |           3758851.0 |
+| Value Equities     |        960446.0 |            960446.0 |
 +--------------------+-----------------+---------------------+
 ```
 
@@ -324,4 +324,4 @@ The next pipeline run rebuilds `serving.mc_simulated_pnl` from every scenario st
 
 ## Navigation
 
-[← Overview](README.md) | [Quick Reference](quick.md) | [Architecture](architecture.md)
+[← Overview](README.md) | [Next: Governed Risk Data →](02-governed-risk-data.md) | [Quick Reference](quick.md) | [Architecture](architecture.md)

@@ -119,8 +119,8 @@ The noise also comes from hashes, not `RAND()`. Every scenario replays the same 
   "desk": "Value Equities",
   "book": "US Financials",
   "notional_usd": 6000000.0,
-  "sim_log_return": 0.01282,
-  "sim_pnl_usd": 77444.54
+  "sim_log_return": 0.01156,
+  "sim_pnl_usd": 69735.49
 }
 ```
 
@@ -138,7 +138,45 @@ The noise also comes from hashes, not `RAND()`. Every scenario replays the same 
 | --- | --- | --- |
 | `definitions/assertions/` | `"assertion"` | Hard fail. Any returned row fails the run. |
 | `definitions/monitoring/` | `"view"` in the `assertions` dataset | Warning only. Never blocks a run. |
+| `infra/data_scans.tf` | Knowledge Catalog quality scan | Published pass or fail per rule and dimension, on each data product asset. Never blocks a run. |
+
+## Knowledge Catalog
+
+The pipeline's consumer-facing tables are published as three data products. Market Risk Metrics is built from the other two.
+
+```mermaid
+flowchart LR
+    subgraph MD["Market Data"]
+        A1["raw.sp500_daily_prices"]
+        A2["raw.sp500_companies"]
+        A3["processed.daily_returns"]
+    end
+    subgraph TP["Trading Positions"]
+        B1["raw.portfolio_positions"]
+    end
+    subgraph MR["Market Risk Metrics"]
+        C1["serving.portfolio_var_summary"]
+        C2["serving.var_by_desk"]
+        C3["serving.var_contributions"]
+        C4["serving.timesfm_forward_params"]
+    end
+    MD --> MR
+    TP --> MR
+    G["Glossary: Market risk"] -.->|terms linked to columns| MR
+    S["Profile, quality and insights scans"] -.->|results published| MD
+    S -.-> TP
+    S -.-> MR
+```
+
+| Object | File | Notes |
+| --- | --- | --- |
+| Data products and assets | `infra/data_products.tf` | Owner is `data_product_owner`, or the deployer, or the pipeline service account. Optional consumer group. |
+| Glossary, categories, terms, term links | `infra/catalog_glossary.tf` | Definitions match the data agent's glossary |
+| Aspect types and values | `infra/catalog_aspects.tf` | `risk-metric-definition` on the VaR views, `model-description` on `timesfm_forward_params`. Values read the as-of date and path count from `workflow_settings.yaml`. |
+| Scans and their first run | `infra/data_scans.tf` | On demand. Insights run 3 minutes after the profiles, so Gemini can ground them in the profile. |
+| Insights labels | `includes/catalog.js`, `infra/market_data.tf` | The **Insights** tab only shows a scan's results when the table carries labels naming the scan |
+| Lineage | none | Recorded by BigQuery from the `CREATE TABLE AS SELECT`, `CREATE VIEW` and load jobs |
 
 ## Navigation
 
-[← Overview](README.md) | [Value at Risk](01-value-at-risk.md) | [Quick Reference](quick.md)
+[← Overview](README.md) | [Value at Risk](01-value-at-risk.md) | [Governed Risk Data](02-governed-risk-data.md) | [Quick Reference](quick.md)
