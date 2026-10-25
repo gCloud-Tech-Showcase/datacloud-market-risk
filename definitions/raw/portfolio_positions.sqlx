@@ -14,13 +14,13 @@ config {
 SELECT symbol, desk, book, notional_usd
 FROM UNNEST([
   STRUCT('AAPL' AS symbol, 'Growth Equities' AS desk, 'US Tech' AS book, 7000000 AS notional_usd),
-  ('MSFT', 'Growth Equities', 'US Tech', 7000000),
+  ('GOOGL', 'Growth Equities', 'US Tech', 7000000),
   ('NVDA', 'Growth Equities', 'US Tech', 6000000),
   ('AVGO', 'Growth Equities', 'US Tech', 3500000),
   ('ORCL', 'Growth Equities', 'US Tech', 2500000),
   ('CRM', 'Growth Equities', 'US Tech', 2000000),
   ('AMD', 'Growth Equities', 'US Tech', 2000000),
-  ('AMZN', 'Growth Equities', 'US Consumer', 6000000),
+  ('LULU', 'Growth Equities', 'US Consumer', 6000000),
   ('TSLA', 'Growth Equities', 'US Consumer', 3000000),
   ('HD', 'Growth Equities', 'US Consumer', 2500000),
   ('MCD', 'Growth Equities', 'US Consumer', 2000000),
