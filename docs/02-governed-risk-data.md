@@ -80,11 +80,17 @@ In the console, open **Knowledge Catalog > Search** and search for `value at ris
 
 To list only the data products, open **Filters** and set **Type** to **Data Product**. All three are listed.
 
-Open **Market Risk Metrics**. The data product page shows:
+Open **Market Risk Metrics**. The **Overview** tab shows:
 
-- **Owner:** who to ask about the data
 - **Description:** what it holds, who builds it and who uses it
-- **Assets:** the four views
+- **Owner**, under **Contacts:** who to ask about the data
+- **Labels**, including `domain: market-risk`
+
+The **Assets** tab lists the four views. **Access groups & permissions** and **Access requests** are where a consumer team asks for access, and **Request access** stays unavailable until the product has an access group (see [Give a consumer team access](#optional-give-a-consumer-team-access)).
+
+![The Market Risk Metrics data product: description, owner, labels, and the Overview, Assets, Access groups & permissions, Access requests, Contract, Aspects and Insights tabs](images/data-product-market-risk-metrics.png)
+
+*Owner email replaced. Console on 2026-10-26.*
 
 A consumer, such as a dashboard team, starts here instead of browsing datasets.
 
@@ -185,6 +191,14 @@ Two custom aspects add structured metadata. Open the entry's **Details** tab in 
 | --- | --- | --- |
 | **Risk metric definition** | `portfolio_var_summary`, `var_by_desk`, `var_contributions` | Method, confidence levels, horizon, lookback, simulation paths, as-of date |
 | **Model description** | `timesfm_forward_params` | Model, how it is called, purpose, inputs, outputs, known limits |
+
+On `var_by_desk`, the **Risk metric definition** aspect sits next to the aspects the scans wrote (**Data Profile**, **Data Quality Scorecard**, **Descriptions**, **Queries**):
+
+![Details tab of var_by_desk: the Risk metric definition aspect expanded, with metric, method, confidence levels, horizon, lookback, simulation paths, as-of date and positions](images/risk-metric-definition-aspect.png)
+
+*Console on 2026-10-26.*
+
+The glossary and the aspects answer different questions. A glossary term defines a concept once, such as what Value at Risk means. The aspect records how one table produced its numbers, which differs from table to table: `portfolio_var_summary` holds Monte Carlo and historical figures, `var_by_desk` is Monte Carlo only, and the path count and as-of date come from the pipeline settings.
 
 The model description only describes the model. It does not record a validation or approval status.
 
