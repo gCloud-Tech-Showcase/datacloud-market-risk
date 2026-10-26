@@ -72,7 +72,13 @@ The insights scans start 3 minutes after the others. If the apply just finished,
 
 ## Step 1: Find the risk data
 
-In the console, open **Knowledge Catalog** and search for `value at risk`. The **Market Risk Metrics** data product and its views are in the results.
+In the console, open **Knowledge Catalog > Search** and search for `value at risk`. The results mix every kind of catalog entry: the glossary term, the risk views, the **Market Risk Metrics** data product, the glossary and its categories, the custom aspect type, and the notebook and saved queries.
+
+![Knowledge Catalog search results for value at risk: the Value at Risk glossary term, the four serving views, the Market Risk Metrics data product, glossary categories and terms, and the Risk metric definition aspect type](images/catalog-search.png)
+
+*Console on 2026-10-26.*
+
+To list only the data products, open **Filters** and set **Type** to **Data Product**. All three are listed.
 
 Open **Market Risk Metrics**. The data product page shows:
 
@@ -86,17 +92,29 @@ A consumer, such as a dashboard team, starts here instead of browsing datasets.
 
 ## Step 2: Trace a number to its source
 
-In **BigQuery Studio**, open `serving.var_by_desk` in the explorer, then the **Lineage** tab.
+Open `var_by_desk` from the search results, then the **Lineage** tab. The same tab is in BigQuery Studio.
 
-Expand the graph upstream. The desk VaR view reads from `mc_simulated_pnl`, which reads from `portfolio_positions`, `standardized_returns` and `timesfm_forward_params`. Following those back reaches `raw.sp500_daily_prices` and the Cloud Storage bucket the Kaggle files landed in.
+The graph opens one step in each direction: `mc_simulated_pnl` upstream, `risk_model_health` downstream. Click the arrow on a node to expand it, or click **Apply** in the **Lineage Explorer** panel to expand the whole graph. The desk VaR view reads from `mc_simulated_pnl`, which reads from `portfolio_positions`, `standardized_returns` and `timesfm_forward_params`. Following those back reaches `raw.sp500_daily_prices` and the Cloud Storage bucket the Kaggle files landed in.
+
+The middle of that chain, `processed.daily_returns`, shows both directions at once. It is built from the two raw tables and feeds the TimesFM forecast, the standardized returns, the historical P&L and an assertion:
+
+![Lineage of processed.daily_returns: sp500_companies and sp500_daily_prices upstream, and timesfm_forward_params, historical_pnl, market_data_integrity, timesfm_forecast and standardized_returns downstream](images/lineage-daily-returns.png)
+
+*Console on 2026-10-26.*
 
 Nothing in the repo declares this lineage. BigQuery records it from the queries Dataform and the loader ran.
+
+The **Relationships** tab (Preview) on the same entry lists the join keys BigQuery saw in query history, such as `daily_returns.symbol = portfolio_positions.symbol`. These are not declared in the repo either.
 
 ---
 
 ## Step 3: Check the inputs
 
-Open `processed.daily_returns`, then its **Data quality** tab. Every rule passed on the last run, and each rule is tagged with a dimension.
+Open `processed.daily_returns`, then its **Data quality** tab. Every rule passed on the last run, and the score is broken down by dimension:
+
+![Data quality tab of daily_returns: overall score 100%, 3 passed rules, Freshness, Completeness and Validity each at 100%](images/data-quality-daily-returns.png)
+
+*Console on 2026-10-26.*
 
 Every data product asset has its own rules:
 
@@ -131,21 +149,33 @@ These scans complement the Dataform assertions in `definitions/assertions/`:
 | What a failure does | Stops the run | Records a failed rule |
 | Who sees the result | The pipeline owner | Anyone who opens the table or data product |
 
-The **Data profile** tab on the same table shows each column's null rate, distinct values, range and top values.
+The **Data profile** tab on the same table shows each column's null rate, unique values, range, quartiles and top values. The single-day moves above 50% are visible as the `log_return` minimum and maximum:
+
+![Data profile tab of daily_returns: close, date, log_return and sector with null percentage, unique percentage, statistics and top 10 values. log_return ranges from -0.77 to 1.02](images/data-profile-daily-returns.png)
+
+*Console on 2026-10-26.*
 
 ---
 
 ## Step 4: Look up what a column means
 
-Open `serving.portfolio_var_summary`, then its **Schema** tab. `var_99_usd` is linked to the glossary term **Value at Risk (VaR)**, and `es_99_usd` to **Expected Shortfall (ES)**. Open a term to read its definition.
+Open `var_by_desk` in Knowledge Catalog, then its **Schema** tab. The **Business terms** column shows the glossary term linked to each column: `var_95_usd` and `var_99_usd` to **Value at Risk (VaR)**, `es_99_usd` to **Expected Shortfall (ES)**, `desk` to **Desk** and `scenario_id` to **Stress scenario**. Click a term to read its definition.
 
-The glossary **Market risk** has 10 terms in three categories:
+![Schema tab of var_by_desk: the Business terms column shows Stress scenario, Desk, Value at Risk (VaR) twice, and Expected Shortfall (ES)](images/glossary-terms-on-columns.png)
+
+*Console on 2026-10-26.*
+
+To browse the whole glossary, open **Knowledge Catalog > Glossaries > Market risk**. It has 10 terms in three categories:
 
 | Category | Terms |
 | --- | --- |
 | Risk measures | Value at Risk, Expected Shortfall, Confidence level, Holding period, Filtered Historical Simulation |
 | Market data | Daily return, Volatility |
 | Portfolio | Desk, Book, Stress scenario |
+
+![The Market risk glossary in Knowledge Catalog: categories Market data, Portfolio and Risk measures, with their terms](images/glossary.png)
+
+*Console on 2026-10-26.*
 
 The definitions match the data agent's glossary in `infra/agent.tf`, so the agent and the catalog describe the numbers the same way.
 
@@ -158,7 +188,13 @@ Two custom aspects add structured metadata. Open the entry's **Details** tab in 
 
 The model description only describes the model. It does not record a validation or approval status.
 
-Last, open the **Insights** tab on `serving.var_by_desk` in BigQuery Studio. Gemini generated a table description and sample questions with SQL, grounded in the profile results. Views show the **Insights** tab in BigQuery Studio only, not on their Knowledge Catalog page.
+Last, open the **Insights** tab on `processed.daily_returns`. Gemini generated sample questions with SQL, grounded in the profile results, such as historical VaR and Expected Shortfall per sector:
+
+![Insights tab of daily_returns: questions generated by Gemini, including sector-decoupled anomalies, flash crashes, volatility shifts and historical 95th percentile VaR and CVaR per sector](images/insights-daily-returns.png)
+
+*Console on 2026-10-26.*
+
+The insights scan also writes a table description and a description for each column. They appear as the **Descriptions** aspect on the entry's **Details** tab. Views show the **Insights** tab in BigQuery Studio only, not on their Knowledge Catalog page. To see the insights for `var_by_desk`, open it in BigQuery Studio.
 
 ---
 
