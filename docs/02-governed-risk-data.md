@@ -86,7 +86,7 @@ Open **Market Risk Metrics**. The **Overview** tab shows:
 - **Owner**, under **Contacts:** who to ask about the data
 - **Labels**, including `domain: market-risk`
 
-The **Assets** tab lists the four views. **Access groups & permissions** and **Access requests** are where a consumer team asks for access, and **Request access** stays unavailable until the product has an access group (see [Give a consumer team access](#optional-give-a-consumer-team-access)).
+The **Assets** tab lists the four views. **Access groups & permissions** and **Access requests** are where consumer access is managed. This deployment sets no access group unless you add one (see [Give a consumer team access](#optional-give-a-consumer-team-access)).
 
 ![The Market Risk Metrics data product: description, owner, labels, and the Overview, Assets, Access groups & permissions, Access requests, Contract, Aspects and Insights tabs](images/data-product-market-risk-metrics.png)
 
