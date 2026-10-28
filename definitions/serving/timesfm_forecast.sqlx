@@ -1,7 +1,7 @@
 config {
   type: "table",
   schema: "serving",
-  description: "SERVING: TimesFM forecast of each portfolio stock's closing price for the next 5 trading days, with a 99% prediction interval. Raw AI.FORECAST output.",
+  description: "SERVING: TimesFM 3.0 forecast of each portfolio stock's closing price for the next 5 trading days, with a 99% prediction interval. Raw AI.FORECAST output.",
   tags: ["market_risk", "serving", "ml"],
   columns: {
     symbol: "Stock ticker",
@@ -26,5 +26,6 @@ FROM AI.FORECAST(
   timestamp_col => 'ts',
   id_cols => ['symbol'],
   horizon => 5,
-  confidence_level => 0.99
+  confidence_level => 0.99,
+  model => 'TimesFM 3.0'
 )
