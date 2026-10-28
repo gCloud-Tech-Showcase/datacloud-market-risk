@@ -45,7 +45,7 @@ locals {
   }
 
   model_description = {
-    model        = "TimesFM 2.5"
+    model        = "TimesFM 3.0 (Preview)"
     access       = "BigQuery AI.FORECAST. Zero-shot: no training or fine-tuning."
     purpose      = "Forecasts each stock's next-day close with a 99% prediction interval. The interval width sets the 1-day volatility that scales the Monte Carlo."
     inputs       = "Daily adjusted closes for the 30 portfolio stocks, last 4 years up to ${local.workflow_vars.as_of_date}"
