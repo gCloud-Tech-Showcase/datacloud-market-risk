@@ -27,7 +27,7 @@ A market risk workflow for Pulsar Capital, a fictional firm with three equity de
 
 From the sample run, as of 2026-10-23:
 
-- **2.33% of notional** 1-day 99% VaR from the Monte Carlo, against 2.73% historical. Most of the gap is the lookback window: 500 days for historical, 1,000 for the simulation.
+- **1.57% of notional** 1-day 99% VaR from the Monte Carlo, against 2.73% historical. TimesFM 3.0 puts forward volatility below the trailing year for all 30 stocks, and the 500-day historical window weighs the April 2025 selloff more than the simulation's 1,000 days.
 - **3,000,000 rows simulated** for a new stress scenario in 10 to 20 seconds, with one `INSERT` and one `CALL`
 - **5 of 5 risk questions** answered by the data agent with SQL that matches the verified queries
 

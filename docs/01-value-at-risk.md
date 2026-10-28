@@ -51,7 +51,7 @@ The prices behind these positions are in `raw.sp500_daily_prices`, one row per s
 
 ## Step 2: Read the TimesFM forecast
 
-One `AI.FORECAST` query forecasts all 30 stocks, using four years of daily closes each. This is its raw output for JPMorgan:
+One `AI.FORECAST` query forecasts all 30 stocks with TimesFM 3.0 (Preview in BigQuery), using four years of daily closes each. This is its raw output for JPMorgan:
 
 Saved query: **02a TimesFM: JPM forecast**
 
@@ -68,11 +68,11 @@ ORDER BY forecast_timestamp;
 +--------+------------+----------------+----------+----------+--------------------+
 | symbol | step_date  | forecast_value | lower_99 | upper_99 | ai_forecast_status |
 +--------+------------+----------------+----------+----------+--------------------+
-| JPM    | 2026-10-24 |         330.87 |    322.3 |   340.36 |                    |
-| JPM    | 2026-10-25 |         331.36 |   321.28 |   342.79 |                    |
-| JPM    | 2026-10-26 |         331.42 |   319.58 |   347.28 |                    |
-| JPM    | 2026-10-27 |         332.58 |   315.62 |   347.06 |                    |
-| JPM    | 2026-10-28 |         333.15 |   317.11 |   354.03 |                    |
+| JPM    | 2026-10-24 |         332.02 |   325.96 |   338.65 |                    |
+| JPM    | 2026-10-25 |         332.46 |   322.31 |   343.25 |                    |
+| JPM    | 2026-10-26 |         333.21 |   320.29 |    347.1 |                    |
+| JPM    | 2026-10-27 |         333.79 |   318.63 |   349.55 |                    |
+| JPM    | 2026-10-28 |         334.36 |   317.14 |   351.76 |                    |
 +--------+------------+----------------+----------+----------+--------------------+
 ```
 
@@ -100,14 +100,14 @@ ORDER BY symbol;
 +--------+------------+--------+---------+-----------------+--------------------+
 | symbol | last_close | low_99 | high_99 | timesfm_vol_pct | historical_vol_pct |
 +--------+------------+--------+---------+-----------------+--------------------+
-| GOOGL  |     320.21 | 304.32 |  337.41 |            31.8 |               31.5 |
-| JPM    |     331.58 |  322.3 |  340.36 |            16.8 |               22.2 |
-| NVDA   |     210.96 | 201.37 |  222.11 |            30.2 |               37.6 |
-| XOM    |     183.21 | 177.04 |  189.36 |            20.7 |               26.2 |
+| GOOGL  |     320.21 | 310.18 |  331.77 |            20.7 |               31.5 |
+| JPM    |     331.58 | 325.96 |  338.65 |            11.8 |               22.2 |
+| NVDA   |     210.96 | 204.94 |  218.62 |            19.9 |               37.6 |
+| XOM    |     183.21 | 177.44 |  189.56 |            20.4 |               26.2 |
 +--------+------------+--------+---------+-----------------+--------------------+
 ```
 
-TimesFM's forward volatility is below the trailing year for JPM, NVDA and XOM, and for 20 of the 30 in the portfolio: its next-day band is narrower than the last year of daily moves would suggest. GOOGL is the exception here, close to its trailing year. The demo uses the band as a volatility input. It does not claim the forward view is more accurate.
+TimesFM's forward volatility is below the trailing year for all four, and for all 30 stocks in the portfolio: its next-day band is narrower than the last year of daily moves would suggest. The trailing year still contains the April 2025 selloff, which is one reason to keep historical VaR beside the simulation. The demo uses the band as a volatility input. It does not claim the forward view is more accurate.
 
 The median forecast is not used as a drift. Over one day its implied move is noise, so the simulation assumes zero drift.
 
@@ -133,13 +133,13 @@ ORDER BY symbol;
 +-------------+---------+-----------------+--------+-----------------+--------------+----------------+-------------+
 | scenario_id | path_id | historical_date | symbol |      desk       | notional_usd | sim_log_return | sim_pnl_usd |
 +-------------+---------+-----------------+--------+-----------------+--------------+----------------+-------------+
-| baseline    |      42 |      2025-08-12 | AAPL   | Growth Equities |    7000000.0 |        0.00547 |    38368.11 |
-| baseline    |      42 |      2025-08-12 | JPM    | Value Equities  |    6000000.0 |        0.01156 |    69735.49 |
-| baseline    |      42 |      2025-08-12 | XOM    | Value Equities  |    5000000.0 |        0.01062 |    53367.22 |
+| baseline    |      42 |      2025-08-12 | AAPL   | Growth Equities |    7000000.0 |        0.00349 |    24506.22 |
+| baseline    |      42 |      2025-08-12 | JPM    | Value Equities  |    6000000.0 |         0.0081 |    48783.98 |
+| baseline    |      42 |      2025-08-12 | XOM    | Value Equities  |    5000000.0 |        0.01043 |    52434.68 |
 +-------------+---------+-----------------+--------+-----------------+--------------+----------------+-------------+
 ```
 
-Sum the 30 rows and you get the portfolio's P&L on that path, here about +$1.35M. VaR is a percentile of that sum across all 100,000 paths.
+Sum the 30 rows and you get the portfolio's P&L on that path, here about +$925K. VaR is a percentile of that sum across all 100,000 paths.
 
 ---
 
@@ -160,7 +160,7 @@ ORDER BY method;
 | scenario_id |   method    | var_95_usd | var_99_usd | es_99_usd | var_99_pct |
 +-------------+-------------+------------+------------+-----------+------------+
 | baseline    | historical  |  1465224.0 |  2732315.0 | 4424647.0 |       2.73 |
-| baseline    | monte_carlo |  1391622.0 |  2330279.0 | 2977558.0 |       2.33 |
+| baseline    | monte_carlo |   972204.0 |  1572927.0 | 2074572.0 |       1.57 |
 +-------------+-------------+------------+------------+-----------+------------+
 ```
 
@@ -168,7 +168,7 @@ ORDER BY method;
 
 *Console on 2026-10-25.*
 
-On 99 days out of 100, the Monte Carlo expects Pulsar Capital to lose less than about $2.3M in a day. On the worst 1% of days it expects to lose about $3.0M on average: that is the Expected Shortfall.
+On 99 days out of 100, the Monte Carlo expects Pulsar Capital to lose less than about $1.6M in a day. On the worst 1% of days it expects to lose about $2.1M on average: that is the Expected Shortfall.
 
 Historical VaR is higher. To see why, list the days that drive it:
 
@@ -193,7 +193,7 @@ LIMIT 5;
 +------------+------------+----------------+
 ```
 
-Two things separate the numbers. The historical view uses the last 500 trading days and the simulation draws from the last 1,000, so the April 2025 tariff selloff weighs more in the historical tail. That window difference is most of the gap. The simulation also rescales each day to TimesFM's volatility, which accounts for a smaller part.
+Two things separate the numbers. The historical view uses the last 500 trading days and the simulation draws from the last 1,000, so the April 2025 tariff selloff weighs more in the historical tail. The simulation also rescales each day to TimesFM's volatility, which is below the trailing year for every stock, so it pulls the Monte Carlo number down further. With TimesFM 3.0 that volatility input is the larger of the two effects.
 
 ---
 
@@ -233,9 +233,9 @@ ORDER BY desk;
 +--------------------+-----------------+---------------------+
 |        desk        | baseline_var_99 | tech_down_10_var_99 |
 +--------------------+-----------------+---------------------+
-| Defensive Equities |        653567.0 |            653567.0 |
-| Growth Equities    |       1512825.0 |           3758851.0 |
-| Value Equities     |        960446.0 |            960446.0 |
+| Defensive Equities |        417871.0 |            417871.0 |
+| Growth Equities    |       1063770.0 |           3309480.0 |
+| Value Equities     |        687054.0 |            687054.0 |
 +--------------------+-----------------+---------------------+
 ```
 

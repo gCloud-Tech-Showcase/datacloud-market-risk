@@ -44,8 +44,8 @@ ORDER BY method, scenario_id;
 |  scenario_id   |   method    | var_95_usd | var_99_usd | es_99_usd | var_99_pct |
 +----------------+-------------+------------+------------+-----------+------------+
 | baseline       | historical  |  1465224.0 |  2732315.0 | 4424647.0 |       2.73 |
-| baseline       | monte_carlo |  1391622.0 |  2330279.0 | 2977558.0 |       2.33 |
-| energy_down_15 | monte_carlo |  3320900.0 |  4279703.0 | 4872998.0 |       4.28 |
+| baseline       | monte_carlo |   972204.0 |  1572927.0 | 2074572.0 |       1.57 |
+| energy_down_15 | monte_carlo |  2905421.0 |  3514322.0 | 3977391.0 |       3.51 |
 +----------------+-------------+------------+------------+-----------+------------+
 ```
 
@@ -65,12 +65,12 @@ ORDER BY desk, scenario_id;
 +----------------+--------------------+------------+-----------+
 |  scenario_id   |        desk        | var_99_usd | es_99_usd |
 +----------------+--------------------+------------+-----------+
-| baseline       | Defensive Equities |   653567.0 |  776571.0 |
-| energy_down_15 | Defensive Equities |   653567.0 |  776571.0 |
-| baseline       | Growth Equities    |  1512825.0 | 1927114.0 |
-| energy_down_15 | Growth Equities    |  1512825.0 | 1927114.0 |
-| baseline       | Value Equities     |   960446.0 | 1292367.0 |
-| energy_down_15 | Value Equities     |  2855632.0 | 3170349.0 |
+| baseline       | Defensive Equities |   417871.0 |  509022.0 |
+| energy_down_15 | Defensive Equities |   417871.0 |  509022.0 |
+| baseline       | Growth Equities    |  1063770.0 | 1345372.0 |
+| energy_down_15 | Growth Equities    |  1063770.0 | 1345372.0 |
+| baseline       | Value Equities     |   687054.0 |  935721.0 |
+| energy_down_15 | Value Equities     |  2586530.0 | 2818983.0 |
 +----------------+--------------------+------------+-----------+
 ```
 
@@ -93,11 +93,11 @@ LIMIT 5;
 +--------+------------------------+--------------------+------------------------+-----------+
 | symbol |         sector         |        desk        | es_99_contribution_usd | share_pct |
 +--------+------------------------+--------------------+------------------------+-----------+
-| LULU   | Consumer Discretionary | Growth Equities    |               635778.0 |      21.4 |
-| GOOGL  | Communication Services | Growth Equities    |               290793.0 |       9.8 |
-| AAPL   | Information Technology | Growth Equities    |               151373.0 |       5.1 |
-| LLY    | Health Care            | Defensive Equities |               143732.0 |       4.8 |
-| JPM    | Financials             | Value Equities     |               135929.0 |       4.6 |
+| LULU   | Consumer Discretionary | Growth Equities    |               398605.0 |      19.2 |
+| GOOGL  | Communication Services | Growth Equities    |               192923.0 |       9.3 |
+| XOM    | Energy                 | Value Equities     |                98671.0 |       4.8 |
+| AAPL   | Information Technology | Growth Equities    |                96942.0 |       4.7 |
+| JPM    | Financials             | Value Equities     |                95809.0 |       4.6 |
 +--------+------------------------+--------------------+------------------------+-----------+
 ```
 

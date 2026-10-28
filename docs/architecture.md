@@ -119,8 +119,8 @@ The noise also comes from hashes, not `RAND()`. Every scenario replays the same 
   "desk": "Value Equities",
   "book": "US Financials",
   "notional_usd": 6000000.0,
-  "sim_log_return": 0.01156,
-  "sim_pnl_usd": 69735.49
+  "sim_log_return": 0.0081,
+  "sim_pnl_usd": 48783.98
 }
 ```
 
